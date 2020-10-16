@@ -105,39 +105,6 @@ class ImagickHandler implements IImageHandler
 		$this->image->setImagePage(0, 0, 0, 0);
 	}
 
-	public function trimWhiteBorder(float $fuzz, float $cap): void
-	{
-
-		throw new NotImplementedException("");
-
-		//find the size of the borders
-		$top = 0;
-		$btm = 0;
-		$lft = 0;
-		$rt = 0;
-		$white = new ImagickPixel('#fff');
-		$img = $this->image;
-		$width = $img->getImageWidth();
-		$widthCap = $cap * $width;
-		$height = $img->getImageHeight();
-		$heightCap = $cap * $height;
-
-		$xCap = 0;
-		$yCap = 0;
-
-		for ($x = 0; $x < $width; $x++) {
-			for ($y = 0; $y < $height; $y++) {
-				$color = $img->getImagePixelColor($x, $y);
-				if ($color->isPixelSimilar($white, $fuzz)) {
-
-				}
-			}
-		}
-
-		$this->image->trimImage($fuzz);
-		$this->image->setImagePage(0, 0, 0, 0);
-	}
-
 	/**
 	 * @return Imagick
 	 */
