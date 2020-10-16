@@ -2,11 +2,11 @@
 
 namespace Quextum\Images\DI;
 
-use App\Images\Handlers\ImagickHandler;
-use App\Images\Handlers\NImageHandler;
-use App\Images\ImageStorage;
-use App\Images\Macros\Latte;
-use App\Images\Pipes\ImagePipe;
+use Quextum\Images\Handlers\ImagickHandler;
+use Quextum\Images\Handlers\NImageHandler;
+use Quextum\Images\ImageStorage;
+use Quextum\Images\Macros\Latte;
+use Quextum\Images\Pipes\ImagePipe;
 use Imagick;
 use Nette;
 

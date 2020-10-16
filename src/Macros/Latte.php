@@ -2,7 +2,7 @@
 
 namespace Quextum\Images\Macros;
 
-use App\Images\Utils\Helpers;
+use Quextum\Images\Utils\Helpers;
 use Latte\CompileException;
 use Latte\Compiler;
 use Latte\MacroNode;

@@ -2,10 +2,10 @@
 
 namespace Quextum\Images\Pipes;
 
-use App\Images\Handlers\IImageHandler;
-use App\Images\Handlers\ImageFactory;
-use App\Images\Utils\BarDumpLogger;
-use App\Images\Utils\Helpers;
+use Quextum\Images\Handlers\IImageHandler;
+use Quextum\Images\Handlers\ImageFactory;
+use Quextum\Images\Utils\BarDumpLogger;
+use Quextum\Images\Utils\Helpers;
 use JsonException;
 use Nette;
 use Nette\FileNotFoundException;
