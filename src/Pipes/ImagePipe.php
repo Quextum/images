@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Images\Pipes;
+namespace Quextum\Images\Pipes;
 
 use App\Images\Handlers\IImageHandler;
 use App\Images\Handlers\ImageFactory;

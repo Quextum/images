@@ -1,7 +1,7 @@
 <?php
 
 
-namespace App\Images;
+namespace Quextum\Images;
 
 
 use RuntimeException;

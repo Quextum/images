@@ -6,7 +6,7 @@
  * Time: 9:57
  */
 
-namespace App\Images\Handlers;
+namespace Quextum\Images\Handlers;
 
 
 class ImageFactory

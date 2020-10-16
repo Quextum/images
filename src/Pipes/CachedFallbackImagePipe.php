@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Images\Pipes;
+namespace Quextum\Images\Pipes;
 
 
 class CachedFallbackImagePipe extends FallbackImagePipe

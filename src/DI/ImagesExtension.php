@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace App\Images\DI;
+namespace Quextum\Images\DI;
 
 use App\Images\Handlers\ImagickHandler;
 use App\Images\Handlers\NImageHandler;

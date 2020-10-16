@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Images\Utils;
+namespace Quextum\Images\Utils;
 
 use Nette;
 use Nette\Utils\Strings;

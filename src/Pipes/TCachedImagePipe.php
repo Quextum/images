@@ -1,7 +1,7 @@
 <?php
 
 
-namespace App\Images\Pipes;
+namespace Quextum\Images\Pipes;
 
 
 use Nette\Caching\Cache;

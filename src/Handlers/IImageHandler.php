@@ -6,7 +6,7 @@
  * Time: 9:52
  */
 
-namespace App\Images\Handlers;
+namespace Quextum\Images\Handlers;
 
 
 interface IImageHandler

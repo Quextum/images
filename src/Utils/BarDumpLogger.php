@@ -1,7 +1,7 @@
 <?php
 
 
-namespace App\Images\Utils;
+namespace Quextum\Images\Utils;
 
 
 use Tracy\Debugger;

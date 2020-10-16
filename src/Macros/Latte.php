@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Images\Macros;
+namespace Quextum\Images\Macros;
 
 use App\Images\Utils\Helpers;
 use Latte\CompileException;
