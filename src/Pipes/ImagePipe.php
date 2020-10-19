@@ -214,7 +214,11 @@ class ImagePipe
         return $this->sourceDir . '/' . $image;
     }
 
-    public static function parseSize(?string $size): array
+    /**
+     * @param string|int[]|null $size
+     * @return array|null[]|string[]
+     */
+    public static function parseSize($size): array
     {
         [$width, $height] = ((is_array($size) ? $size : explode('x', $size)) + [null, null]);
         return [$width ?: null, $height ?: null];
