@@ -23,8 +23,8 @@ class ImagesExtension extends Nette\DI\CompilerExtension
         return Nette\Schema\Expect::structure([
             'pipe' => Nette\Schema\Expect::string(ImagePipe::class),
             'handler' => Nette\Schema\Expect::string(self::getDefaultHandler()),
-            'sourceDir' => Nette\Schema\Expect::string(),
-            'assetsDir' => Nette\Schema\Expect::string(),
+            'sourceDir' => Nette\Schema\Expect::string()->assert('is_dir')->assert('is_readable'),
+            'assetsDir' => Nette\Schema\Expect::string()->assert('is_dir')->assert('is_writable'),
         ])->castTo('array');
     }
 
