@@ -2,13 +2,14 @@
 
 namespace Quextum\Images\DI;
 
+use Imagick;
+use Latte\Engine;
+use Nette;
 use Quextum\Images\Handlers\ImagickHandler;
 use Quextum\Images\Handlers\NImageHandler;
 use Quextum\Images\ImageStorage;
 use Quextum\Images\Macros\Latte;
 use Quextum\Images\Pipes\ImagePipe;
-use Imagick;
-use Nette;
 
 /**
  * Class ImagesExtension
@@ -46,7 +47,7 @@ class ImagesExtension extends Nette\DI\CompilerExtension
     public function beforeCompile(): void
     {
         parent::beforeCompile();
-        if (class_exists(Latte::class)) {
+        if (class_exists(Engine::class)) {
             $latte = $this->getContainerBuilder()->getDefinition('latte.latteFactory')->getResultDefinition();
             $macro = Latte::class . '::install';
             $latte->addSetup('?->onCompile[] = function ($engine) { ' . $macro . '($engine->getCompiler()); }', ['@self']);
