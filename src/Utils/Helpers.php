@@ -33,11 +33,12 @@ class Helpers
             $part = Strings::webalize($part);
         }
         $path = implode('/', $parts);
+        $path = $path ? $path . '/' : "";
         $ext = $info->getExtension();
         $filename = $info->getBasename(".$ext");
         $filename = Strings::webalize($filename);
         $ext = Strings::lower($ext);
-        return "$path/$filename.$ext";
+        return "$path$filename.$ext";
     }
 
 }
