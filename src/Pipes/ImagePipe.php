@@ -19,7 +19,7 @@ use Tracy\ILogger;
 /**
  * @author Jan Brabec <brabijan@gmail.com>
  * @method onBeforeRequest(Request $request)
- * @method onAfterRequest(Request $request,Result $result)
+ * @method onAfterRequest(Request $request, Result $result)
  * @method onBeforeSave(IImageHandler $img, string $thumbnailPath, string $image, $width, $height, int|string|null $flags)
  * @method onAfterSave(string $thumbnailPath)
  */
@@ -117,7 +117,7 @@ class ImagePipe
         $request = new Request($image, $size, $flags, $format, $options, false);
         $this->onBeforeRequest($request);
         $result = $this->process($request);
-        $this->onAfterRequest($request,$result);
+        $this->onAfterRequest($request, $result);
         return $result;
     }
 
@@ -136,7 +136,7 @@ class ImagePipe
         $request = new Request($image, $size, $flags, $format, $options, false);
         $this->onBeforeRequest($request);
         $result = $this->process($request);
-        $this->onAfterRequest($request,$result);
+        $this->onAfterRequest($request, $result);
         return $result;
     }
 
@@ -205,7 +205,7 @@ class ImagePipe
                 $this->logger->log("Image not found: $image $originalFile ");
             }
         };
-        return new Result($this->getPath() . '/' . $thumbPath, $originalFile, $thumbnailFile, getimagesize($thumbnailFile),mime_content_type($thumbnailFile));
+        return new Result($this->getPath() . '/' . $thumbPath, $originalFile, $thumbnailFile, getimagesize($thumbnailFile) ?: null, @mime_content_type($thumbnailFile) ?: null);
     }
 
     /**

@@ -16,15 +16,16 @@ class Result
     public ?string $thumbnailFile;
     public ?array $size;
     public ?string $mime;
+
     /**
      * Result constructor.
      * @param string $src
      * @param string|null $originalFile
      * @param string|null $thumbnailFile
-     * @param int $width
-     * @param int $height
+     * @param array|null $size
+     * @param string|null $mime
      */
-    public function __construct(string $src, ?string $originalFile = null, ?string $thumbnailFile = null, ?array $size = null,?string $mime)
+    public function __construct(string $src, ?string $originalFile = null, ?string $thumbnailFile = null, ?array $size = null, ?string $mime = null)
     {
         $this->src = $src;
         $this->originalFile = $originalFile;
