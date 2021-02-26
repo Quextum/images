@@ -6,6 +6,7 @@ namespace Quextum\Images\Pipes;
 
 use JsonException;
 use Nette\FileNotFoundException;
+use Quextum\Images\Result;
 
 class FallbackImagePipe extends ImagePipe
 {
@@ -16,10 +17,10 @@ class FallbackImagePipe extends ImagePipe
      * @param null $flags
      * @param string|null $format
      * @param array|null $options
-     * @return string
+     * @return Result
      * @throws JsonException
      */
-    public function request($image, $size = null, $flags = null, string $format = null, array $options = null): string
+    public function request($image, $size = null, $flags = null, string $format = null, array $options = null): Result
     {
         try {
             return parent::requestStrict($image, $size, $flags, $format, $options);

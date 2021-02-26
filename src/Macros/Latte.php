@@ -17,28 +17,23 @@ use Latte\PhpWriter;
 class Latte extends MacroSet
 {
 
+    protected string $pipeName;
 
-    public static function install(Compiler $compiler)
+    /**
+     * @param string $pipeName
+     */
+    public function setPipeName(string $pipeName): void
+    {
+        $this->pipeName = $pipeName;
+    }
+
+    public static function install(Compiler $compiler, string $pipeName, string $macro)
     {
         $me = new static($compiler);
-        $me->addMacro('img', [$me, 'macroImg'], null, [$me, 'macroAttrImg']);
-        $me->addMacro('imgSet', [$me, 'macroImgSet'], null, [$me, 'macroAttrImgSet']);
+        $me->setPipeName($pipeName);
+        $me->addMacro($macro, [$me, 'macroImg'], null, [$me, 'macroAttrImg']);
         return $me;
     }
-
-    public function macroImgSet(MacroNode $node, PhpWriter $writer): string
-    {
-        $command = '$this->global->imagePipe->requestSrcSet(' . $node->args . ')';
-        return $writer->write('echo %escape(' . $writer->formatWord($command) . ')');
-    }
-
-
-    public function macroAttrImgSet(MacroNode $node, PhpWriter $writer): string
-    {
-        $command = '$this->global->imagePipe->requestSrcSet(' . $node->args . ')';
-        return $writer->write('?> src="<?php echo %escape(' . $writer->formatWord($command) . ')?>" <?php ');
-    }
-
 
     /**
      * @param MacroNode $node
@@ -48,22 +43,7 @@ class Latte extends MacroSet
      */
     public function macroImg(MacroNode $node, PhpWriter $writer): string
     {
-        $arguments = Helpers::prepareMacroArguments($node->args);
-        if ($arguments['name'] === null) {
-            throw new CompileException('Please provide filename.');
-        }
-
-        // $namespace = $arguments['namespace'];
-        //unset($arguments['namespace']);
-        $arguments = array_map(function ($value) use ($writer) {
-            return $value ? $writer->formatWord($value) : 'NULL';
-        }, $arguments);
-
-        $command = '$this->global->imagePipe';
-        // $command .= $namespace !== NULL ? '->setNamespace(' . $writer->formatWord(trim($namespace)) . ')' : '';
-        $command .= '->request(' . implode(', ', $arguments) . ')';
-
-        return $writer->write('echo %escape(' . $writer->formatWord($command) . ')');
+        return $writer->write('echo %escape($this->global->' . $this->pipeName . '->request(%node.args))');
     }
 
 
@@ -75,23 +55,34 @@ class Latte extends MacroSet
      */
     public function macroAttrImg(MacroNode $node, PhpWriter $writer): string
     {
-        $arguments = Helpers::prepareMacroArguments($node->args);
-        if ($arguments['name'] === null) {
-            throw new CompileException('Please provide filename.');
+
+        $start = '$response = $this->global->' . $this->pipeName . '->request(%node.args); ?>';
+        if ($node->htmlNode->name === 'a') {
+            return $writer->write($start.'
+            href="<?php echo %escape($response->src) ?>" 
+            <?php ');
+        }
+        self::assertAttrs($node, 'type');
+        if ($node->htmlNode->name === 'img') {
+            self::assertAttrs($node, 'width', 'height');
+            return $writer->write($start.'
+            src="<?php echo %escape($response->src) ?>" 
+            type="<?php echo %escape($response->mime) ?>" 
+            width="<?php echo %escape($response->size[0]) ?>" 
+            height="<?php echo %escape($response->size[1]) ?>" <?php ');
+        }
+        if ($node->htmlNode->name === 'source') {
+            return $writer->write($start.'
+            srcset="<?php echo %escape($response->src) ?> <?php echo %escape($response->size[0]) ?>w" 
+            type="<?php echo %escape($response->mime) ?>" 
+            <?php ');
         }
 
-        //$namespace = $arguments['namespace'];
-        //unset($arguments['namespace']);
-        $arguments = array_map(function ($value) use ($writer) {
-            return $value ? $writer->formatWord($value) : 'NULL';
-        }, $arguments);
-
-        $command = '$this->global->imagePipe';
-        //$command .= $namespace !== NULL ? '->setNamespace(' . $writer->formatWord(trim($namespace)) . ')' : '';
-        $command .= '->request(' . implode(', ', $arguments) . ')';
-
-        return $writer->write('?> src="<?php echo %escape(' . $writer->formatWord($command) . ')?>" <?php ');
     }
 
+    private static function assertAttrs(MacroNode $node, ...$attrs)
+    {
+        foreach ($attrs as $attr) array_key_exists($attr, $node->htmlNode->attrs) && throw new CompileException("attribute $attr must not be set");
+    }
 
 }

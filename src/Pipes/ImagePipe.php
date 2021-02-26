@@ -11,6 +11,7 @@ use Nette\Utils\Image as NImage;
 use Quextum\Images\Handlers\IImageHandler;
 use Quextum\Images\Handlers\ImageFactory;
 use Quextum\Images\Request;
+use Quextum\Images\Result;
 use Quextum\Images\Utils\BarDumpLogger;
 use Quextum\Images\Utils\Helpers;
 use Tracy\ILogger;
@@ -18,6 +19,7 @@ use Tracy\ILogger;
 /**
  * @author Jan Brabec <brabijan@gmail.com>
  * @method onBeforeRequest(Request $request)
+ * @method onAfterRequest(Request $request,Result $result)
  * @method onBeforeSave(IImageHandler $img, string $thumbnailPath, string $image, $width, $height, int|string|null $flags)
  * @method onAfterSave(string $thumbnailPath)
  */
@@ -36,6 +38,9 @@ class ImagePipe
 
     /** @var callable[] */
     public $onBeforeRequest;
+
+    /** @var callable[] */
+    public $onAfterRequest;
 
     /** @var callable[] */
     public $onBeforeSave;
@@ -107,12 +112,13 @@ class ImagePipe
      * @return string
      * @throws JsonException
      */
-    public function request($image, $size = null, $flags = null, string $format = null, ?array $options = null): string
+    public function request($image, $size = null, $flags = null, string $format = null, ?array $options = null): Result
     {
         $request = new Request($image, $size, $flags, $format, $options, false);
         $this->onBeforeRequest($request);
-        [$path] = $this->process($request);
-        return $path;
+        $result = $this->process($request);
+        $this->onAfterRequest($request,$result);
+        return $result;
     }
 
 
@@ -125,12 +131,13 @@ class ImagePipe
      * @return string
      * @throws JsonException
      */
-    public function requestStrict($image, $size = null, $flags = null, string $format = null, ?array $options = null): string
+    public function requestStrict($image, $size = null, $flags = null, string $format = null, ?array $options = null): Result
     {
-        $request = new Request($image, $size, $flags, $format, $options, true);
+        $request = new Request($image, $size, $flags, $format, $options, false);
         $this->onBeforeRequest($request);
-        [$path] = $this->process($request);
-        return $path;
+        $result = $this->process($request);
+        $this->onAfterRequest($request,$result);
+        return $result;
     }
 
     protected static function transformFlags(&$flags)
@@ -151,16 +158,16 @@ class ImagePipe
 
     /**
      * @param Request $request
-     * @return array
+     * @return Result
      * @throws JsonException
      */
-    protected function process(Request $request): array
+    protected function process(Request $request): Result
     {
 
         extract((array)$request);
 
         if (empty($image)) {
-            return ['#', null, null];
+            return new Result('#');
         }
         $originalFile = $this->getOriginalFile($image);
         if (file_exists($originalFile)) {
@@ -169,7 +176,7 @@ class ImagePipe
             throw new FileNotFoundException($originalFile);
         } else {
             $this->logger->log("Image not found: $originalFile");
-            return ['#', null, null];
+            return new Result('#');
         }
         self::transformFlags($flags);
 
@@ -197,8 +204,8 @@ class ImagePipe
             } else {
                 $this->logger->log("Image not found: $image $originalFile ");
             }
-        }
-        return [$this->getPath() . '/' . $thumbPath, $originalFile, $thumbnailFile];
+        };
+        return new Result($this->getPath() . '/' . $thumbPath, $originalFile, $thumbnailFile, getimagesize($thumbnailFile),mime_content_type($thumbnailFile));
     }
 
     /**

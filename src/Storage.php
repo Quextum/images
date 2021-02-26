@@ -16,7 +16,7 @@ use Nette\InvalidArgumentException;
  * @author Filip Procházka <filip.prochazka@kdyby.org>
  * @method onUploadImage(string $path, string $namespace)
  */
-class ImageStorage
+class Storage
 {
 
     use Nette\SmartObject;
@@ -62,17 +62,13 @@ class ImageStorage
      */
     public function upload(FileUpload $file): Image
     {
-        if (!$file->isOk() || !$file->isImage()) {
-            throw new InvalidArgumentException('');
+        if (!$file->isOk()) {
+            throw new InvalidArgumentException('File is not OK!');
         }
-
         $path = $this->generatePath($file->getSanitizedName());
-
-
         $file->move($path);
         $this->onUploadImage($path, $this->namespace);
         $this->namespace = null;
-
         return new Image($path);
     }
 
@@ -112,7 +108,7 @@ class ImageStorage
             throw new InvalidStateException('Filename was not provided');
         }
         /** @var $file SplFileInfo */
-        foreach (Finder::findFiles($filename)->from($this->imagesDir . ($this->namespace ? "/" . $this->namespace : "")) as $file) {
+        foreach (Finder::findFiles($filename)->from(rtrim("$this->imagesDir/$this->namespace",'/')) as $file) {
             @unlink($file->getPathname());
         }
         $this->namespace = null;
