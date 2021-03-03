@@ -43,7 +43,7 @@ class Latte extends MacroSet
      */
     public function macroImg(MacroNode $node, PhpWriter $writer): string
     {
-        return $writer->write('echo %escape($this->global->' . $this->pipeName . '->request(%node.args))');
+        return $writer->write('echo(%escape($this->global->' . $this->pipeName . '->request(%node.args)));');
     }
 
 
@@ -56,28 +56,58 @@ class Latte extends MacroSet
     public function macroAttrImg(MacroNode $node, PhpWriter $writer): string
     {
 
-        $start = '$response = $this->global->' . $this->pipeName . '->request(%node.args); ?>';
+        $start = '$response = $this->global->' . $this->pipeName . '->request(%node.args);';
         if ($node->htmlNode->name === 'a') {
-            return $writer->write($start.'
-            href="<?php echo %escape($response->src) ?>" 
-            <?php ');
+            self::assertAttrs($node, 'href');
+            $attrs = ['href' => '$response->src'];
+            return $writer->write($start . self::write($attrs));
         }
-        self::assertAttrs($node, 'type');
+        //self::assertAttrs($node, 'type');
         if ($node->htmlNode->name === 'img') {
-            self::assertAttrs($node, 'width', 'height');
-            return $writer->write($start.'
-            src="<?php echo %escape($response->src) ?>" 
-            type="<?php echo %escape($response->mime) ?>" 
-            width="<?php echo %escape($response->size[0]) ?>" 
-            height="<?php echo %escape($response->size[1]) ?>" <?php ');
+            //self::assertAttrs($node, 'width', 'height');
+            $attrs = [
+                'src' => '$response->src',
+                'type' => '$response->mime',
+                'width' => '$response->size[0]',
+                'height' => '$response->size[1]',
+            ];
+
+            return $writer->write($start . self::write(array_diff_key($attrs,$node->htmlNode->attrs)));
         }
         if ($node->htmlNode->name === 'source') {
-            return $writer->write($start.'
-            srcset="<?php echo %escape($response->src) ?> <?php echo %escape($response->size[0]) ?>w" 
-            type="<?php echo %escape($response->mime) ?>" 
-            <?php ');
+            $attrs = [
+                /* 'srcset' => '$response->src',*/
+                'type' => '$response->mime',
+            ];
+            return $writer->write($start . ' ?> srcset="<?php echo(%escape($response->src)); if(isset($response->size[0])){ echo " ",%escape($response->size[0]),"w"; } ?>" <?php ' . self::write(array_diff_key($attrs,$node->htmlNode->attrs)));
         }
 
+    }
+
+    private static function write(array $props): string
+    {
+        $ret = [];
+        foreach ($props as $attr => $code) {
+            $ret[] = self::prepare($attr, $code);
+        }
+        return implode(' ', $ret);
+    }
+
+    private static function php(string $php): string
+    {
+        return "<?php $php ?>";
+    }
+
+    private static function html(string $html): string
+    {
+        return "?> $html <?php";
+    }
+
+    private static function prepare(string $attr, string $code): string
+    {
+        $php = self::php("echo(%escape($code));");
+        $html = self::html("$attr=\"$php\"");
+        return " if(isset($code)){ $html } ";
     }
 
     private static function assertAttrs(MacroNode $node, ...$attrs)
