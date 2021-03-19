@@ -8,6 +8,7 @@ use Nette\FileNotFoundException;
 use Nette\InvalidStateException;
 use Nette\Utils\FileSystem;
 use Nette\Utils\Image as NImage;
+use Quextum\Images\Config;
 use Quextum\Images\Handlers\IImageHandler;
 use Quextum\Images\Handlers\ImageFactory;
 use Quextum\Images\Request;
@@ -63,6 +64,9 @@ class ImagePipe
     /** @var ILogger */
     protected $logger;
 
+    /** @var array */
+    protected $quality;
+
     /**
      * @param string $assetsDir
      * @param string $sourceDir
@@ -70,10 +74,11 @@ class ImagePipe
      * @param string $handlerClass
      * @param Nette\Http\Request $httpRequest
      */
-    public function __construct(string $assetsDir, string $sourceDir, string $wwwDir, string $handlerClass, Nette\Http\Request $httpRequest)
+    public function __construct(string $assetsDir, string $sourceDir, string $wwwDir, string $handlerClass, array $quality, Nette\Http\Request $httpRequest)
     {
         $this->sourceDir = $sourceDir;
         $this->assetsDir = $assetsDir;
+        $this->quality = $quality;
         $this->path = rtrim($httpRequest->url->basePath, '/') . str_replace($wwwDir, '', $this->assetsDir);
         $this->factory = new ImageFactory($handlerClass);
         $this->setLogger(new BarDumpLogger());
@@ -197,7 +202,7 @@ class ImagePipe
                 }
                 $this->onBeforeSave($img, $thumbnailFile, $image, $width, $height, $flags);
                 FileSystem::createDir(dirname($thumbnailFile));
-                $img->save($thumbnailFile, 90);
+                $img->save($thumbnailFile, $options['quality'][$type] ?? $options['quality'] ?? $this->quality[$type] ?? $this->quality['default']);
                 $this->onAfterSave($thumbnailFile);
             } elseif ($strictMode) {
                 throw new FileNotFoundException("File '$originalFile' not found");
