@@ -202,7 +202,7 @@ class ImagePipe
                 }
                 $this->onBeforeSave($img, $thumbnailFile, $image, $width, $height, $flags);
                 FileSystem::createDir(dirname($thumbnailFile));
-                $img->save($thumbnailFile, $options['quality'][$type] ?? $options['quality'] ?? $this->quality[$type] ?? $this->quality['default']);
+                $img->save($thumbnailFile,  $options['quality'] ?? $this->quality[$format] ?? $this->quality['default'],$format);
                 $this->onAfterSave($thumbnailFile);
             } elseif ($strictMode) {
                 throw new FileNotFoundException("File '$originalFile' not found");
