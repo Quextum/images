@@ -138,7 +138,7 @@ class ImagePipe
      */
     public function requestStrict($image, $size = null, $flags = null, string $format = null, ?array $options = null): Result
     {
-        $request = new Request($image, $size, $flags, $format, $options, false);
+        $request = new Request($image, $size, $flags, $format, $options, true);
         $this->onBeforeRequest($request);
         $result = $this->process($request);
         $this->onAfterRequest($request, $result);
