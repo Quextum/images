@@ -1,12 +1,8 @@
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 namespace Quextum\Images\Handlers;
 
 use Imagick;
-use ImagickPixel;
-use Nette\NotImplementedException;
 use Nette\Utils\Image;
 
 class ImagickHandler implements IImageHandler

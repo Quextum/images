@@ -2,13 +2,10 @@
 
 namespace Quextum\Images\Pipes;
 
-use JsonException;
 use Nette;
-use Nette\FileNotFoundException;
-use Nette\InvalidStateException;
 use Nette\Utils\FileSystem;
 use Nette\Utils\Image as NImage;
-use Quextum\Images\Config;
+use Quextum\Images\FileNotFoundException;
 use Quextum\Images\Handlers\IImageHandler;
 use Quextum\Images\Handlers\ImageFactory;
 use Quextum\Images\Request;
@@ -26,7 +23,6 @@ use Tracy\ILogger;
  */
 class ImagePipe
 {
-
     use Nette\SmartObject;
 
     public const FLAGS = [
@@ -37,41 +33,24 @@ class ImagePipe
         'stretch' => NImage::STRETCH,
     ];
 
-    /** @var callable[] */
-    public $onBeforeRequest;
+    public array $onBeforeRequest;
+    public array $onAfterRequest;
+    public array $onBeforeSave;
+    public array $onAfterSave;
 
-    /** @var callable[] */
-    public $onAfterRequest;
-
-    /** @var callable[] */
-    public $onBeforeSave;
-
-    /** @var callable[] */
-    public $onAfterSave;
-
-    /** @var string */
-    protected $assetsDir;
-
-    /** @var string */
-    protected $sourceDir;
-
-    /** @var ImageFactory */
-    protected $factory;
-
-    /**  @var string */
-    protected $path;
-
-    /** @var ILogger */
-    protected $logger;
-
-    /** @var array */
-    protected $quality;
+    protected string $assetsDir;
+    protected string $sourceDir;
+    protected string $path;
+    protected ImageFactory $factory;
+    protected ILogger $logger;
+    protected array $quality;
 
     /**
      * @param string $assetsDir
      * @param string $sourceDir
      * @param string $wwwDir
      * @param string $handlerClass
+     * @param array $quality
      * @param Nette\Http\Request $httpRequest
      */
     public function __construct(string $assetsDir, string $sourceDir, string $wwwDir, string $handlerClass, array $quality, Nette\Http\Request $httpRequest)
@@ -224,16 +203,16 @@ class ImagePipe
     }
 
     /**
-     * @param string|int[]|null $size
+     * @param array|string|null $size
      * @return array|null[]|string[]
      */
-    public static function parseSize($size): array
+    public static function parseSize(array|string|null $size): array
     {
         [$width, $height] = ((is_array($size) ? $size : explode('x', $size)) + [null, null]);
         return [$width ?: null, $height ?: null];
     }
 
-    protected function getThumbnailPath(string $image, $width, $height, $options, $format, $flags, $hash)
+    protected function getThumbnailPath(string $image, $width, $height, $options, $format, $flags, $hash): string
     {
         $spec = ($width || $height) ? '_' . ($height ? $width . 'x' . $height : $width) : null;
         if ($options) {

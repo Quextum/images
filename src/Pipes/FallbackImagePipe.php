@@ -1,26 +1,17 @@
-<?php
-
+<?php declare(strict_types=1);
 
 namespace Quextum\Images\Pipes;
 
-
-use JsonException;
-use Nette\FileNotFoundException;
+use Quextum\Images\FileNotFoundException;
 use Quextum\Images\Result;
 
 class FallbackImagePipe extends ImagePipe
 {
 
     /**
-     * @param mixed $image
-     * @param null $size
-     * @param null $flags
-     * @param string|null $format
-     * @param array|null $options
-     * @return Result
-     * @throws JsonException
+     * {@inheritdoc}
      */
-    public function request($image, $size = null, $flags = null, string $format = null, array $options = null): Result
+    public function request(mixed $image, mixed $size = null, string|int $flags = null, string $format = null, ?array $options = null): Result
     {
         try {
             return parent::requestStrict($image, $size, $flags, $format, $options);

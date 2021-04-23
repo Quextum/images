@@ -5,7 +5,6 @@ namespace Quextum\Images\DI;
 use Imagick;
 use Latte\Engine;
 use Nette;
-use Quextum\Images\Config;
 use Quextum\Images\Handlers\ImagickHandler;
 use Quextum\Images\Handlers\NImageHandler;
 use Quextum\Images\Storage;
