@@ -110,14 +110,13 @@ class ImagePipe
 
     /**
      * @param mixed $image
-     * @param null $size
-     * @param null $flags
+     * @param mixed $size
+     * @param string|int|null $flags
      * @param string|null $format
      * @param array|null $options
-     * @return string
-     * @throws JsonException
+     * @return Result
      */
-    public function request($image, $size = null, $flags = null, string $format = null, ?array $options = null): Result
+    public function request(mixed $image, mixed $size = null,string|int $flags = null, string $format = null, ?array $options = null): Result
     {
         $request = new Request($image, $size, $flags, $format, $options, false);
         $this->onBeforeRequest($request);
@@ -129,14 +128,13 @@ class ImagePipe
 
     /**
      * @param mixed $image
-     * @param null $size
-     * @param null $flags
+     * @param mixed $size
+     * @param string|int|null $flags
      * @param string|null $format
      * @param array|null $options
-     * @return string
-     * @throws JsonException
+     * @return Result
      */
-    public function requestStrict($image, $size = null, $flags = null, string $format = null, ?array $options = null): Result
+    public function requestStrict(mixed $image, mixed $size = null,string|int $flags = null, string $format = null, ?array $options = null): Result
     {
         $request = new Request($image, $size, $flags, $format, $options, true);
         $this->onBeforeRequest($request);
@@ -164,7 +162,6 @@ class ImagePipe
     /**
      * @param Request $request
      * @return Result
-     * @throws JsonException
      */
     protected function process(Request $request): Result
     {
@@ -202,7 +199,7 @@ class ImagePipe
                 }
                 $this->onBeforeSave($img, $thumbnailFile, $image, $width, $height, $flags);
                 FileSystem::createDir(dirname($thumbnailFile));
-                $img->save($thumbnailFile,  $options['quality'] ?? $this->quality[$format] ?? $this->quality['default'],$format);
+                $img->save($thumbnailFile, $options['quality'] ?? $this->quality[$format] ?? $this->quality['default'], $format);
                 $this->onAfterSave($thumbnailFile);
             } elseif ($strictMode) {
                 throw new FileNotFoundException("File '$originalFile' not found");
