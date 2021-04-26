@@ -16,9 +16,25 @@ class FallbackImagePipe extends ImagePipe
         try {
             return parent::requestStrict($image, $size, $flags, $format, $options);
         } catch (FileNotFoundException $exception) {
-            [$namespace] = explode('/', $image) + ['default'];
-            return parent::requestStrict("fallbacks/$namespace.jpg", $size, $flags, $format, $options);
+            $fallback =  $this->getFallbackImage($image);
+            return parent::requestStrict($fallback, $size, $flags, $format, $options);
         }
+    }
+
+
+    public function getFallbackImage(mixed $image)
+    {
+        $namespace = 'default';
+        if (is_string($image) && count($parts = explode('/', $image, 1)) > 1) {
+            $namespace = $parts[0];
+        }
+        if (is_array($image) && isset($image['namespace'])) {
+            $namespace = $image['namespace'];
+        }
+        if (is_object($image) && isset($image->namespace)) {
+            $namespace = $image->namespace;
+        }
+        return "fallbacks/$namespace.jpg";
     }
 
 
