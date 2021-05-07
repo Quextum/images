@@ -16,8 +16,13 @@ class FallbackImagePipe extends ImagePipe
         try {
             return parent::requestStrict($image, $size, $flags, $format, $options);
         } catch (FileNotFoundException $exception) {
-            $fallback =  $this->getFallbackImage($image);
-            return parent::requestStrict($fallback, $size, $flags, $format, $options);
+            $image = $this->getFallbackImage($image);
+            try {
+                return parent::requestStrict($image, $size, $flags, $format, $options);
+            } catch (FileNotFoundException $exception) {
+                $image = $this->getFallbackImage(null);
+                return parent::requestStrict($image, $size, $flags, $format, $options);
+            }
         }
     }
 
