@@ -145,12 +145,17 @@ class ImagePipe
      */
     protected function process(Request $request): Result
     {
-
-        extract((array)$request);
-
+        $image = $request->image;
         if (empty($image)) {
             return new Result('#');
         }
+
+        $size = $request->size;
+        $flags = $request->flags;
+        $format = $request->format;
+        $options = $request->options;
+        $strictMode = $request->strictMode;
+
         $originalFile = $this->getOriginalFile($image);
         if (file_exists($originalFile)) {
             $hash = hash_file('crc32b', $originalFile);
@@ -170,26 +175,25 @@ class ImagePipe
             if (file_exists($originalFile)) {
                 try {
                     $img = $this->factory->create($originalFile);
+                    if ($flags === 'crop') {
+                        $img->crop('50%', '50%', $width, $height);
+                    } elseif ($width || $height) {
+                        if ($flags & NImage::EXACT && (!$height || !$width)) {
+                            [$width, $height] = NImage::calculateSize($img->getWidth(), $img->getHeight(), (int)$width, (int)$height, NImage::FIT | NImage::SHRINK_ONLY);
+                        }
+                        $img->resize($width, $height, $flags, $options);
+                    }
+                    $this->onBeforeSave($img, $thumbnailFile, $image, $width, $height, $flags);
+                    FileSystem::createDir(dirname($thumbnailFile));
+                    $img->save($thumbnailFile, $options['quality'] ?? $this->quality[$format] ?? $this->quality['default'], $format);
+                    $this->onAfterSave($thumbnailFile);
                 } catch (ImageException $exception) {
                     if ($strictMode) {
                         throw new FileNotFoundException("File '$originalFile' not found", previous: $exception);
                     } else {
-                        $this->logger->log("Image not found: $image $originalFile ");
                         $this->logger->log($exception);
                     }
                 }
-                if ($flags === 'crop') {
-                    $img->crop('50%', '50%', $width, $height);
-                } elseif ($width || $height) {
-                    if ($flags & NImage::EXACT && (!$height || !$width)) {
-                        [$width, $height] = NImage::calculateSize($img->getWidth(), $img->getHeight(), (int)$width, (int)$height, NImage::FIT | NImage::SHRINK_ONLY);
-                    }
-                    $img->resize($width, $height, $flags, $options);
-                }
-                $this->onBeforeSave($img, $thumbnailFile, $image, $width, $height, $flags);
-                FileSystem::createDir(dirname($thumbnailFile));
-                $img->save($thumbnailFile, $options['quality'] ?? $this->quality[$format] ?? $this->quality['default'], $format);
-                $this->onAfterSave($thumbnailFile);
             } elseif ($strictMode) {
                 throw new FileNotFoundException("File '$originalFile' not found");
             } else {
