@@ -26,7 +26,7 @@ class ImagickHandler implements IImageHandler
         try {
             $this->image = new Imagick($path);
         } catch (\ImagickException $e) {
-            throw new ImageException(previous: $e);
+            throw new ImageException('Unable to create image',previous: $e);
         }
     }
 
@@ -68,7 +68,7 @@ class ImagickHandler implements IImageHandler
             [$x, $y, $width, $height] = Image::calculateCutout($this->getWidth(), $this->getHeight(), $x, $y, $width, $height);
             $this->image->cropImage($width ? (int)$width : null, $height ? (int)$height : null, $x, $y);
         } catch (\ImagickException $e) {
-            throw new ImageException(previous: $e);
+            throw new ImageException('Unable to crop image',previous: $e);
         }
         return $this;
     }
@@ -110,7 +110,7 @@ class ImagickHandler implements IImageHandler
             $this->image->stripImage();
             $this->image->writeImage($path);
         } catch (\ImagickException $e) {
-            throw new ImageException(previous: $e);
+            throw new ImageException('Unable to save image',previous: $e);
         }
         return $this;
     }

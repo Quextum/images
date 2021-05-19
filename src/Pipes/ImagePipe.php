@@ -7,6 +7,7 @@ use Nette\Utils\FileSystem;
 use Nette\Utils\Image as NImage;
 use Quextum\Images\FileNotFoundException;
 use Quextum\Images\Handlers\IImageHandler;
+use Quextum\Images\Handlers\ImageException;
 use Quextum\Images\Handlers\ImageFactory;
 use Quextum\Images\Request;
 use Quextum\Images\Result;
@@ -95,7 +96,7 @@ class ImagePipe
      * @param array|null $options
      * @return Result
      */
-    public function request(mixed $image, mixed $size = null,string|int $flags = null, string $format = null, ?array $options = null): Result
+    public function request(mixed $image, mixed $size = null, string|int $flags = null, string $format = null, ?array $options = null): Result
     {
         $request = new Request($image, $size, $flags, $format, $options, false);
         $this->onBeforeRequest($request);
@@ -113,7 +114,7 @@ class ImagePipe
      * @param array|null $options
      * @return Result
      */
-    public function requestStrict(mixed $image, mixed $size = null,string|int $flags = null, string $format = null, ?array $options = null): Result
+    public function requestStrict(mixed $image, mixed $size = null, string|int $flags = null, string $format = null, ?array $options = null): Result
     {
         $request = new Request($image, $size, $flags, $format, $options, true);
         $this->onBeforeRequest($request);
@@ -167,7 +168,16 @@ class ImagePipe
 
         if (!file_exists($thumbnailFile)) {
             if (file_exists($originalFile)) {
-                $img = $this->factory->create($originalFile);
+                try {
+                    $img = $this->factory->create($originalFile);
+                } catch (ImageException $exception) {
+                    if ($strictMode) {
+                        throw new FileNotFoundException("File '$originalFile' not found", previous: $exception);
+                    } else {
+                        $this->logger->log("Image not found: $image $originalFile ");
+                        $this->logger->log($exception);
+                    }
+                }
                 if ($flags === 'crop') {
                     $img->crop('50%', '50%', $width, $height);
                 } elseif ($width || $height) {
