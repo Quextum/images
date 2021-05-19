@@ -5,45 +5,23 @@ namespace Quextum\Images\Handlers;
 
 interface IImageHandler
 {
-	/**
-	 * @param string $path
-	 * @return static
-	 */
-	public static function create(string $path);
+    /**
+     * @param string $path
+     * @return IImageHandler
+     * @throws ImageException
+     */
+    public static function create(string $path): IImageHandler;
 
-	public static function getSupportedFormats(): array;
+    public static function getSupportedFormats(): array;
 
-	/**
-	 * @param $width
-	 * @param $height
-	 * @param $flag
-	 * @param array|null $options
-	 * @return static
-	 */
-	public function resize($width, $height, $flag, $options = null);
+    public function resize($width, $height, $flag, array $options = null): static;
 
-	/**
-	 * @param $x
-	 * @param $y
-	 * @param $width
-	 * @param $height
-	 * @return static
-	 */
-	public function crop($x, $y, $width, $height);
+    public function crop($x, $y, $width, $height): static;
 
+    public function save(string $path, int $quality, $format = null): static;
 
-	/**
-	 * @param string $path
-	 * @param int $quality
-	 * @param null $format
-	 * @return static
-	 */
-	public function save(string $path, int $quality, $format = null);
+    public function getWidth(): int;
 
-	/** @return int */
-	public function getWidth();
-
-	/** @return int */
-	public function getHeight();
+    public function getHeight(): int;
 
 }

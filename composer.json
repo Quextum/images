@@ -24,6 +24,9 @@
   "require-dev": {
     "nette/tester": "^2.0"
   },
+  "suggest": {
+    "ext-imagick": "*"
+  },
   "autoload": {
     "psr-4": {
       "Quextum\\Images\\": "src"
