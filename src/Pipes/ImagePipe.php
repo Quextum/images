@@ -170,7 +170,6 @@ class ImagePipe
         [$width, $height] = self::parseSize($size);
         $thumbPath = $this->getThumbnailPath($image, $width, $height, $options, $format, $flags, $hash);
         $thumbnailFile = $this->assetsDir . '/' . $thumbPath;
-
         if (!file_exists($thumbnailFile)) {
             if (file_exists($originalFile)) {
                 try {
@@ -189,7 +188,7 @@ class ImagePipe
                     $this->onAfterSave($thumbnailFile);
                 } catch (ImageException $exception) {
                     if ($strictMode) {
-                        throw new FileNotFoundException("File '$originalFile' not found", previous: $exception);
+                        throw new FileNotFoundException("Unable to create image from '$originalFile'", previous: $exception);
                     } else {
                         $this->logger->log($exception);
                     }
@@ -200,7 +199,7 @@ class ImagePipe
                 $this->logger->log("Image not found: $image $originalFile ");
             }
         };
-        return new Result($this->getPath() . '/' . $thumbPath, $originalFile, $thumbnailFile, getimagesize($thumbnailFile) ?: null, @mime_content_type($thumbnailFile) ?: null);
+        return new Result($this->getPath() . '/' . $thumbPath, $originalFile, $thumbnailFile, (@getimagesize($thumbnailFile)) ?: null, @mime_content_type($thumbnailFile) ?: null);
     }
 
     /**
@@ -222,7 +221,7 @@ class ImagePipe
      */
     public static function parseSize(array|string|null $size): array
     {
-        [$width, $height] = ((is_array($size) ? $size : explode('x', $size)) + [null, null]);
+        [$width, $height] = ((is_array($size) ? $size : explode('x', (string)$size)) + [null, null]);
         return [$width ?: null, $height ?: null];
     }
 

@@ -22,7 +22,10 @@
     "ext-json": "*"
   },
   "require-dev": {
-    "nette/tester": "^2.0"
+    "nette/tester": "^2.0",
+    "phpstan/phpstan": "^1.4",
+    "jetbrains/phpstorm-attributes": "^1.0",
+    "latte/latte": "^2.10"
   },
   "suggest": {
     "ext-imagick": "*"

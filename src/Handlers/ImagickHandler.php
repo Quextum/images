@@ -5,7 +5,7 @@ namespace Quextum\Images\Handlers;
 use Imagick;
 use Nette\Utils\Image;
 
-class ImagickHandler implements IImageHandler
+final class ImagickHandler implements IImageHandler
 {
 
     public const QUALITY = 100;

@@ -1,20 +1,19 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Quextum\Images\Macros;
 
-use Quextum\Images\Utils\Helpers;
 use Latte\CompileException;
 use Latte\Compiler;
 use Latte\MacroNode;
 use Latte\Macros\MacroSet;
 use Latte\PhpWriter;
-
+use Nette\InvalidStateException;
 
 /**
  * @author Jan Brabec <brabijan@gmail.com>
  * @author Filip Procházka <filip@prochazka.su>
  */
-class Latte extends MacroSet
+final class Latte extends MacroSet
 {
 
     protected string $pipeName;
@@ -72,16 +71,16 @@ class Latte extends MacroSet
                 'height' => '$response->size[1]',
             ];
 
-            return $writer->write($start . self::write(array_diff_key($attrs,$node->htmlNode->attrs)));
+            return $writer->write($start . self::write(array_diff_key($attrs, $node->htmlNode->attrs)));
         }
         if ($node->htmlNode->name === 'source') {
             $attrs = [
                 /* 'srcset' => '$response->src',*/
                 'type' => '$response->mime',
             ];
-            return $writer->write($start . ' ?> srcset="<?php echo(%escape($response->src)); if(isset($response->size[0])){ echo " ",%escape($response->size[0]),"w"; } ?>" <?php ' . self::write(array_diff_key($attrs,$node->htmlNode->attrs)));
+            return $writer->write($start . ' ?> srcset="<?php echo(%escape($response->src)); if(isset($response->size[0])){ echo " ",%escape($response->size[0]),"w"; } ?>" <?php ' . self::write(array_diff_key($attrs, $node->htmlNode->attrs)));
         }
-
+        throw new InvalidStateException("Unsupported node {$node->htmlNode->name} supported are: a,img,source");
     }
 
     private static function write(array $props): string

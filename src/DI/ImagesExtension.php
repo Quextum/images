@@ -2,15 +2,14 @@
 
 namespace Quextum\Images\DI;
 
-use Imagick;
-use Latte\Engine;
 use Nette;
 use Quextum\Images\Handlers\ImagickHandler;
 use Quextum\Images\Handlers\NImageHandler;
 use Quextum\Images\Storage;
 use Quextum\Images\Macros\Latte;
 use Quextum\Images\Pipes\ImagePipe;
-
+use Latte\Engine;
+use Imagick;
 /**
  * Class ImagesExtension
  * @package App\Images\DI
