@@ -27,7 +27,7 @@
     "latte/latte": "^2.10"
   },
   "suggest": {
-    "tracy/tracy": ">2.6",
+    "tracy/tracy": ">=2.6",
     "ext-imagick": "*"
   },
   "autoload": {
