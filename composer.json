@@ -14,7 +14,6 @@
   "require": {
     "php": ">=8.0",
     "nette/utils": "^3.0",
-    "tracy/tracy": "^2.6",
     "nette/http": "^3.0",
     "nette/caching": "^3.0",
     "nette/schema": "^1.0",
@@ -28,6 +27,7 @@
     "latte/latte": "^2.10"
   },
   "suggest": {
+    "tracy/tracy": ">2.6",
     "ext-imagick": "*"
   },
   "autoload": {
