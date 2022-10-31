@@ -4,8 +4,11 @@
 namespace Quextum\Images;
 
 
+use Quextum\Images\Utils\SourceImage;
+
 class Request
 {
+    /** @var mixed|SourceImage  */
 	public mixed $image;
 	/** @var string|int[]|string[] */
 	public mixed $size;
@@ -16,7 +19,7 @@ class Request
 
     /**
      * Request constructor.
-     * @param mixed $image
+     * @param mixed|SourceImage $image
      * @param mixed $size
      * @param int|string|null $flags
      * @param string|null $format

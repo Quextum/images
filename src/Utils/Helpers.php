@@ -3,12 +3,22 @@
 namespace Quextum\Images\Utils;
 
 use Nette;
+use Nette\InvalidArgumentException;
+use Nette\Utils\Image as NImage;
 use Nette\Utils\Strings;
 
 class Helpers
 {
 
     use Nette\SmartObject;
+
+    public const FLAGS = [
+        'fit' => NImage::FIT,
+        'fill' => NImage::FILL,
+        'exact' => NImage::EXACT,
+        'shrink' => NImage::SHRINK_ONLY,
+        'stretch' => NImage::STRETCH,
+    ];
 
     public const ARGS = ['name', 'size', 'flags', 'format', 'options'];
 
@@ -39,6 +49,22 @@ class Helpers
         $filename = Strings::webalize($filename);
         $ext = Strings::lower($ext);
         return "$path$filename.$ext";
+    }
+
+    public static function transformFlags(&$flags): void
+    {
+        if (empty($flags)) {
+            $flags = NImage::FIT;
+        } elseif (!is_int($flags)) {
+            $_flags = explode('_', strtolower($flags));
+            $flags = 0;
+            foreach ($_flags as $flag) {
+                $flags |= self::FLAGS[$flag];
+            }
+            if (!isset($flags)) {
+                throw new InvalidArgumentException('Mode is not allowed');
+            }
+        }
     }
 
 }

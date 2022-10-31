@@ -9,10 +9,6 @@ use Latte\Macros\MacroSet;
 use Latte\PhpWriter;
 use Nette\InvalidStateException;
 
-/**
- * @author Jan Brabec <brabijan@gmail.com>
- * @author Filip Procházka <filip@prochazka.su>
- */
 final class Latte extends MacroSet
 {
 

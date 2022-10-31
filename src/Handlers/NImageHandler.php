@@ -74,13 +74,18 @@ class NImageHandler implements IImageHandler
         return $this;
     }
 
-    #[Pure] public function getWidth():int
+    #[Pure] public function getWidth(): int
     {
         return $this->image->getWidth();
     }
 
-    #[Pure] public function getHeight():int
+    #[Pure] public function getHeight(): int
     {
         return $this->image->getHeight();
+    }
+
+    public static function isSupported(): bool
+    {
+        return extension_loaded('gd');
     }
 }

@@ -145,4 +145,9 @@ final class ImagickHandler implements IImageHandler
     {
         return $this->image;
     }
+
+    public static function isSupported(): bool
+    {
+        return extension_loaded('imagick');
+    }
 }

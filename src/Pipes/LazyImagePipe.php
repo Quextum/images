@@ -1,6 +1,7 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Quextum\Images\Pipes;
+
 
 use Nette;
 use Nette\Utils\FileSystem;
@@ -13,6 +14,7 @@ use Quextum\Images\Request;
 use Quextum\Images\Result;
 use Quextum\Images\Utils\BarDumpLogger;
 use Quextum\Images\Utils\Helpers;
+use Quextum\Images\Utils\SourceImage;
 use Tracy\ILogger;
 
 /**
@@ -21,7 +23,7 @@ use Tracy\ILogger;
  * @method onBeforeSave(IImageHandler $img, string $thumbnailPath, string $image, $width, $height, int|string|null $flags)
  * @method onAfterSave(string $thumbnailPath)
  */
-class ImagePipe implements IImagePipe
+class LazyImagePipe implements IImagePipe
 {
     use Nette\SmartObject;
 
@@ -96,6 +98,7 @@ class ImagePipe implements IImagePipe
         return $result;
     }
 
+
     /**
      * @param mixed $image
      * @param mixed $size
@@ -113,6 +116,7 @@ class ImagePipe implements IImagePipe
         return $result;
     }
 
+
     /**
      * @param Request $request
      * @return Result
@@ -122,6 +126,11 @@ class ImagePipe implements IImagePipe
         $image = $request->image;
         if (empty($image)) {
             return new Result('#');
+            // throw new Nette\InvalidArgumentException('Image not specified');
+        }
+        /** @var SourceImage $image */
+        if (!isset($image->width, $image->height, $image->mimeType)) {
+            throw new Nette\InvalidArgumentException('Insufficient image info. Width, Height and MimeType are necessary.');
         }
 
         $size = $request->size;
@@ -130,7 +139,7 @@ class ImagePipe implements IImagePipe
         $options = $request->options;
         $strictMode = $request->strictMode;
 
-        $originalFile = $this->getOriginalFile($image);
+        $originalFile = $this->getOriginalFile($image->path);
         if (file_exists($originalFile)) {
             $hash = hash_file('crc32b', $originalFile);
         } elseif ($strictMode) {
@@ -142,39 +151,68 @@ class ImagePipe implements IImagePipe
         Helpers::transformFlags($flags);
 
         [$width, $height] = self::parseSize($size);
-        $thumbPath = $this->getThumbnailPath($image, $width, $height, $options, $format, $flags, $hash);
+        $thumbPath = $this->getThumbnailPath($image->path, $width, $height, $options, $format, $flags, $hash);
         $thumbnailFile = $this->assetsDir . '/' . $thumbPath;
-        if (!file_exists($thumbnailFile)) {
+
+
+        if ($flags === 'crop') {
+            $targetWidth = $width;
+            $targetHeight = $height;
+        } elseif ($width || $height) {
+            if ($flags & NImage::EXACT && (!$height || !$width)) {
+                [$width, $height] = NImage::calculateSize($image->width, $image->height, (int)$width, (int)$height, NImage::FIT | NImage::SHRINK_ONLY);
+            }
+            [$targetWidth, $targetHeight] = NImage::calculateSize($image->width, $image->height, (int)$width, (int)$height, $flags);
+        } else {
+            $targetWidth = $image->width;
+            $targetHeight = $image->height;
+        }
+
+
+        $ready = file_exists($thumbnailFile);
+
+        if (!$ready) {
             if (file_exists($originalFile)) {
-                try {
-                    $img = $this->factory->create($originalFile);
-                    if ($flags === 'crop') {
-                        $img->crop('50%', '50%', $width, $height);
-                    } elseif ($width || $height) {
-                        if ($flags & NImage::EXACT && (!$height || !$width)) {
-                            [$width, $height] = NImage::calculateSize($img->getWidth(), $img->getHeight(), (int)$width, (int)$height, NImage::FIT | NImage::SHRINK_ONLY);
+                register_shutdown_function(function () use ($thumbnailFile, $originalFile, $width, $height, $targetWidth, $targetHeight, $image, $format, $options, $flags) {
+                    try {
+                        $img = $this->factory->create($originalFile);
+                        if ($flags === 'crop') {
+                            $img->crop('50%', '50%', $targetWidth, $targetHeight);
+                        } elseif ($width || $height) {
+                            $img->resize($targetWidth, $targetHeight, $flags, $options);
                         }
-                        $img->resize($width, $height, $flags, $options);
-                    }
-                    $this->onBeforeSave($img, $thumbnailFile, $image, $width, $height, $flags);
-                    FileSystem::createDir(dirname($thumbnailFile));
-                    $img->save($thumbnailFile, $options['quality'] ?? $this->quality[$format] ?? $this->quality['default'], $format);
-                    $this->onAfterSave($thumbnailFile);
-                } catch (ImageException $exception) {
-                    if ($strictMode) {
-                        throw new FileNotFoundException("Unable to create image from '$originalFile'", previous: $exception);
-                    } else {
+                        $this->onBeforeSave($img, $thumbnailFile, $image->path, $targetWidth, $targetHeight, $flags);
+                        FileSystem::createDir(dirname($thumbnailFile));
+                        $img->save($thumbnailFile, $options['quality'] ?? $this->quality[$format] ?? $this->quality['default'], $format);
+                        $this->onAfterSave($thumbnailFile);
+                    } catch (ImageException $exception) {
                         $this->logger->log($exception);
                     }
-                }
+                });
             } elseif ($strictMode) {
                 throw new FileNotFoundException("File '$originalFile' not found");
             } else {
                 $this->logger->log("Image not found: $image $originalFile ");
             }
+        }
+
+        $mimeType = match ($format) {
+            null => $image->mimeType,
+            'jpg', 'jpeg' => 'image/jpeg',
+            'png' => 'image/png',
+            'avif' => 'image/avif',
+            'bmp' => 'image/bmp',
+            'webp' => 'image/webp',
         };
-        return new Result($this->getPath() . '/' . $thumbPath, $originalFile, $thumbnailFile, (@getimagesize($thumbnailFile)) ?: null, @mime_content_type($thumbnailFile) ?: null);
+
+        return Result::from($this->getPath() . '/' . $thumbPath, $originalFile, $thumbnailFile, [
+            0 => $targetWidth,
+            1 => $targetHeight,
+            'width' => $targetWidth,
+            'height' => $targetHeight
+        ], $mimeType)->setReady($ready);
     }
+
 
     /**
      * @return string
@@ -193,17 +231,20 @@ class ImagePipe implements IImagePipe
      * @param array|string|null $size
      * @return array|null[]|string[]
      */
-    public static function parseSize(array|string|null $size): array
+    public static function parseSize(array|string|int|null $size): array
     {
         [$width, $height] = ((is_array($size) ? $size : explode('x', (string)$size)) + [null, null]);
         return [$width ?: null, $height ?: null];
     }
 
+    /**
+     * @throws \JsonException
+     */
     protected function getThumbnailPath(string $image, $width, $height, $options, $format, $flags, $hash): string
     {
         $spec = ($width || $height) ? '_' . ($height ? $width . 'x' . $height : $width) : null;
         if ($options) {
-            $spec .= '_' . substr(crc32(json_encode($options)), 0, 4);
+            $spec .= '_' . substr((string)crc32(json_encode($options, JSON_THROW_ON_ERROR)), 0, 4);
         }
         $info = pathinfo($image);
         $dirname = trim($info['dirname'], './');

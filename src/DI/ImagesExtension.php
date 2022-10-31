@@ -9,7 +9,7 @@ use Quextum\Images\Storage;
 use Quextum\Images\Macros\Latte;
 use Quextum\Images\Pipes\ImagePipe;
 use Latte\Engine;
-use Imagick;
+
 /**
  * Class ImagesExtension
  * @package App\Images\DI
@@ -25,26 +25,34 @@ class ImagesExtension extends Nette\DI\CompilerExtension
                 ->default(['default' => 90])->mergeDefaults(),
             'pipe' => Nette\Schema\Expect::string(ImagePipe::class),
             'storage' => Nette\Schema\Expect::string(Storage::class),
-            'handler' => Nette\Schema\Expect::string(self::getDefaultHandler()),
+            'handler' => Nette\Schema\Expect::anyOf(
+                Nette\Schema\Expect::string(),
+                Nette\Schema\Expect::listOf(Nette\Schema\Expect::string())
+            )->default([
+                ImagickHandler::class,
+                NImageHandler::class
+            ]),
             'sourceDir' => Nette\Schema\Expect::string()->assert('is_dir')->assert('is_readable'),
             'assetsDir' => Nette\Schema\Expect::string()->assert('is_dir')->assert('is_writable'),
             'macro' => Nette\Schema\Expect::string('img'),
         ]);
     }
 
-    public static function getDefaultHandler(): string
-    {
-        return class_exists(Imagick::class) ? ImagickHandler::class : NImageHandler::class;
-    }
-
     public function loadConfiguration(): void
     {
         $config = $this->getConfig();
         $builder = $this->getContainerBuilder();
-        $this->pipe = $builder->addDefinition($this->prefix('imagePipe'))
-            ->setFactory($config->pipe, [$config->assetsDir, $config->sourceDir, $this->getContainerBuilder()->parameters['wwwDir'], $config->handler, $config->quality])
+        $handler = null;
+        foreach ((array)$config->handler as $handlerCandidate) {
+            if ($handlerCandidate::isSupported()) {
+                $handler = $handlerCandidate;
+            }
+        }
+        $handler || throw new Nette\InvalidStateException("No valid handler specified in configuration");
+        $this->pipe = $builder->addDefinition($this->prefix('pipe'))
+            ->setFactory($config->pipe, [$config->assetsDir, $config->sourceDir, $this->getContainerBuilder()->parameters['wwwDir'], $handler, $config->quality])
             ->setType($config->pipe)->addTag(Nette\DI\Extensions\InjectExtension::TAG_INJECT);
-        $builder->addDefinition($this->prefix('imageStorage'))
+        $builder->addDefinition($this->prefix('storage'))
             ->setFactory($config->storage, [$config->sourceDir])
             ->setType($config->storage)
             ->addTag(Nette\DI\Extensions\InjectExtension::TAG_INJECT);

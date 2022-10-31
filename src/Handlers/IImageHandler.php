@@ -24,4 +24,6 @@ interface IImageHandler
 
     public function getHeight(): int;
 
+    public static function isSupported(): bool;
+
 }
