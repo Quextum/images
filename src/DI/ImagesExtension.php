@@ -5,8 +5,8 @@ namespace Quextum\Images\DI;
 use Nette;
 use Quextum\Images\Handlers\ImagickHandler;
 use Quextum\Images\Handlers\NImageHandler;
+use Quextum\Images\Latte\ImagesLatteExtension;
 use Quextum\Images\Storage;
-use Quextum\Images\Macros\Latte;
 use Quextum\Images\Pipes\ImagePipe;
 use Latte\Engine;
 
@@ -35,6 +35,7 @@ class ImagesExtension extends Nette\DI\CompilerExtension
             'sourceDir' => Nette\Schema\Expect::string()->assert('is_dir')->assert('is_readable'),
             'assetsDir' => Nette\Schema\Expect::string()->assert('is_dir')->assert('is_writable'),
             'macro' => Nette\Schema\Expect::string('img'),
+            'pipeName' => Nette\Schema\Expect::string($this->name.'Pipe'),
         ]);
     }
 
@@ -52,23 +53,19 @@ class ImagesExtension extends Nette\DI\CompilerExtension
         $this->pipe = $builder->addDefinition($this->prefix('pipe'))
             ->setFactory($config->pipe, [$config->assetsDir, $config->sourceDir, $this->getContainerBuilder()->parameters['wwwDir'], $handler, $config->quality])
             ->setType($config->pipe)->addTag(Nette\DI\Extensions\InjectExtension::TAG_INJECT);
+
+        if (class_exists(Engine::class)) {
+            $latte = $this->getContainerBuilder()->getDefinition('latte.latteFactory')->getResultDefinition();
+            $class = ImagesLatteExtension::class;
+            $latte->addSetup("\$service->addExtension(new $class(?,?,?))", [$this->pipe,$config->macro,$config->pipeName]);
+        }
+
         $builder->addDefinition($this->prefix('storage'))
             ->setFactory($config->storage, [$config->sourceDir])
             ->setType($config->storage)
             ->addTag(Nette\DI\Extensions\InjectExtension::TAG_INJECT);
-    }
 
-    public function beforeCompile(): void
-    {
-        parent::beforeCompile();
-        $config = $this->getConfig();
-        if (class_exists(Engine::class)) {
-            $latte = $this->getContainerBuilder()->getDefinition('latte.latteFactory')->getResultDefinition();
-            $macro = Latte::class . '::install';
-            $pipeName = "{$this->name}ImagePipe";
-            $latte->addSetup('?->onCompile[] = function ($engine) { ' . $macro . '($engine->getCompiler(),?,?); }', ['@self', $pipeName, $config->macro]);
-            $latte->addSetup('$service->addProvider(?,?)', [$pipeName, $this->pipe]);
-        }
+
     }
 
 }
