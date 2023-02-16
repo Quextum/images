@@ -2,7 +2,7 @@
 
 namespace Quextum\Images\Utils;
 
-class SourceImage
+class SourceImage implements \Stringable
 {
     public string $path;
     public int|null $width = null;

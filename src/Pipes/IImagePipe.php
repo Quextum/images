@@ -2,9 +2,10 @@
 
 namespace Quextum\Images\Pipes;
 
+use Quextum\Images\Request;
 use Quextum\Images\Result;
 
 interface IImagePipe
 {
-    public function request(mixed $image, mixed $size = null, string|int $flags = null, string $format = null, ?array $options = null): Result;
+    public function process(Request $request): Result;
 }

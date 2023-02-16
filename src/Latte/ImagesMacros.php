@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-namespace Quextum\Images\Macros;
+namespace Quextum\Images\Latte;
 
 use Latte\CompileException;
 use Latte\Compiler;
@@ -9,7 +9,7 @@ use Latte\Macros\MacroSet;
 use Latte\PhpWriter;
 use Nette\InvalidStateException;
 
-final class Latte extends MacroSet
+final class ImagesMacros extends MacroSet
 {
 
     protected string $pipeName;

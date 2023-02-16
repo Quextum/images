@@ -8,7 +8,7 @@ use Quextum\Images\Utils\SourceImage;
 
 class Request
 {
-    /** @var mixed|SourceImage  */
+    /** @var \Stringable & mixed|SourceImage  */
 	public mixed $image;
 	/** @var string|int[]|string[] */
 	public mixed $size;

@@ -16,8 +16,6 @@ use Quextum\Images\Utils\Helpers;
 use Tracy\ILogger;
 
 /**
- * @method onBeforeRequest(Request $request)
- * @method onAfterRequest(Request $request, Result $result)
  * @method onBeforeSave(IImageHandler $img, string $thumbnailPath, string $image, $width, $height, int|string|null $flags)
  * @method onAfterSave(string $thumbnailPath)
  */
@@ -25,8 +23,6 @@ class ImagePipe implements IImagePipe
 {
     use Nette\SmartObject;
 
-    public array $onBeforeRequest;
-    public array $onAfterRequest;
     public array $onBeforeSave;
     public array $onAfterSave;
 
@@ -37,14 +33,6 @@ class ImagePipe implements IImagePipe
     protected ILogger $logger;
     protected array $quality;
 
-    /**
-     * @param string $assetsDir
-     * @param string $sourceDir
-     * @param string $wwwDir
-     * @param string $handlerClass
-     * @param array $quality
-     * @param Nette\Http\Request $httpRequest
-     */
     public function __construct(string $assetsDir, string $sourceDir, string $wwwDir, string $handlerClass, array $quality, Nette\Http\Request $httpRequest)
     {
         $this->sourceDir = $sourceDir;
@@ -55,69 +43,22 @@ class ImagePipe implements IImagePipe
         $this->setLogger(new BarDumpLogger());
     }
 
-    /**
-     * @param ILogger $logger
-     */
     public function setLogger(ILogger $logger): void
     {
         $this->logger = $logger;
     }
 
-    /**
-     * @return string
-     */
     public function getAssetsDir(): string
     {
         return $this->assetsDir;
     }
 
-    /**
-     * @return string
-     */
     public function getSourceDir(): string
     {
         return $this->sourceDir;
     }
 
-    /**
-     * @param mixed $image
-     * @param mixed $size
-     * @param string|int|null $flags
-     * @param string|null $format
-     * @param array|null $options
-     * @return Result
-     */
-    public function request(mixed $image, mixed $size = null, string|int $flags = null, string $format = null, ?array $options = null): Result
-    {
-        $request = new Request($image, $size, $flags, $format, $options, false);
-        $this->onBeforeRequest($request);
-        $result = $this->process($request);
-        $this->onAfterRequest($request, $result);
-        return $result;
-    }
-
-    /**
-     * @param mixed $image
-     * @param mixed $size
-     * @param string|int|null $flags
-     * @param string|null $format
-     * @param array|null $options
-     * @return Result
-     */
-    public function requestStrict(mixed $image, mixed $size = null, string|int $flags = null, string $format = null, ?array $options = null): Result
-    {
-        $request = new Request($image, $size, $flags, $format, $options, true);
-        $this->onBeforeRequest($request);
-        $result = $this->process($request);
-        $this->onAfterRequest($request, $result);
-        return $result;
-    }
-
-    /**
-     * @param Request $request
-     * @return Result
-     */
-    protected function process(Request $request): Result
+    public function process(Request $request): Result
     {
         $image = $request->image;
         if (empty($image)) {
@@ -163,36 +104,29 @@ class ImagePipe implements IImagePipe
                 } catch (ImageException $exception) {
                     if ($strictMode) {
                         throw new FileNotFoundException("Unable to create image from '$originalFile'", previous: $exception);
-                    } else {
-                        $this->logger->log($exception);
                     }
+                    $this->logger->log($exception);
                 }
             } elseif ($strictMode) {
                 throw new FileNotFoundException("File '$originalFile' not found");
             } else {
                 $this->logger->log("Image not found: $image $originalFile ");
             }
-        };
+        }
         return new Result($this->getPath() . '/' . $thumbPath, $originalFile, $thumbnailFile, (@getimagesize($thumbnailFile)) ?: null, @mime_content_type($thumbnailFile) ?: null);
     }
 
-    /**
-     * @return string
-     */
     public function getPath(): string
     {
         return $this->path;
     }
 
-    protected function getOriginalFile(string $image)
+    protected function getOriginalFile(string $image): string
     {
         return $this->sourceDir . '/' . $image;
     }
 
-    /**
-     * @param array|string|null $size
-     * @return array|null[]|string[]
-     */
+    /**  @return null[]|string[] */
     public static function parseSize(array|string|null $size): array
     {
         [$width, $height] = ((is_array($size) ? $size : explode('x', (string)$size)) + [null, null]);

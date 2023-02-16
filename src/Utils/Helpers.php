@@ -67,4 +67,20 @@ class Helpers
         }
     }
 
+
+    public static function callbackDelayed(callable $callback): void
+    {
+        register_shutdown_function(static fn() => register_shutdown_function($callback));
+    }
+
+    public static function callbackAfterRequest(callable $callback): void
+    {
+        self::callbackDelayed(static function () use ($callback) {
+            if (function_exists('fastcgi_finish_request')) {
+                fastcgi_finish_request();
+            }
+            $callback();
+        });
+    }
+
 }

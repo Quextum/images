@@ -7,7 +7,7 @@ namespace Quextum\Images;
 use JetBrains\PhpStorm\Pure;
 use Nette\SmartObject;
 
-class Result
+class Result implements \Stringable
 {
 
     use SmartObject;

@@ -18,8 +18,6 @@ use Quextum\Images\Utils\SourceImage;
 use Tracy\ILogger;
 
 /**
- * @method onBeforeRequest(Request $request)
- * @method onAfterRequest(Request $request, Result $result)
  * @method onBeforeSave(IImageHandler $img, string $thumbnailPath, string $image, $width, $height, int|string|null $flags)
  * @method onAfterSave(string $thumbnailPath)
  */
@@ -27,8 +25,6 @@ class LazyImagePipe implements IImagePipe
 {
     use Nette\SmartObject;
 
-    public array $onBeforeRequest;
-    public array $onAfterRequest;
     public array $onBeforeSave;
     public array $onAfterSave;
 
@@ -39,14 +35,6 @@ class LazyImagePipe implements IImagePipe
     protected ILogger $logger;
     protected array $quality;
 
-    /**
-     * @param string $assetsDir
-     * @param string $sourceDir
-     * @param string $wwwDir
-     * @param string $handlerClass
-     * @param array $quality
-     * @param Nette\Http\Request $httpRequest
-     */
     public function __construct(string $assetsDir, string $sourceDir, string $wwwDir, string $handlerClass, array $quality, Nette\Http\Request $httpRequest)
     {
         $this->sourceDir = $sourceDir;
@@ -57,71 +45,22 @@ class LazyImagePipe implements IImagePipe
         $this->setLogger(new BarDumpLogger());
     }
 
-    /**
-     * @param ILogger $logger
-     */
     public function setLogger(ILogger $logger): void
     {
         $this->logger = $logger;
     }
 
-    /**
-     * @return string
-     */
     public function getAssetsDir(): string
     {
         return $this->assetsDir;
     }
 
-    /**
-     * @return string
-     */
     public function getSourceDir(): string
     {
         return $this->sourceDir;
     }
 
-    /**
-     * @param mixed $image
-     * @param mixed $size
-     * @param string|int|null $flags
-     * @param string|null $format
-     * @param array|null $options
-     * @return Result
-     */
-    public function request(mixed $image, mixed $size = null, string|int $flags = null, string $format = null, ?array $options = null): Result
-    {
-        $request = new Request($image, $size, $flags, $format, $options, false);
-        $this->onBeforeRequest($request);
-        $result = $this->process($request);
-        $this->onAfterRequest($request, $result);
-        return $result;
-    }
-
-
-    /**
-     * @param mixed $image
-     * @param mixed $size
-     * @param string|int|null $flags
-     * @param string|null $format
-     * @param array|null $options
-     * @return Result
-     */
-    public function requestStrict(mixed $image, mixed $size = null, string|int $flags = null, string $format = null, ?array $options = null): Result
-    {
-        $request = new Request($image, $size, $flags, $format, $options, true);
-        $this->onBeforeRequest($request);
-        $result = $this->process($request);
-        $this->onAfterRequest($request, $result);
-        return $result;
-    }
-
-
-    /**
-     * @param Request $request
-     * @return Result
-     */
-    protected function process(Request $request): Result
+    public function process(Request $request): Result
     {
         $image = $request->image;
         if (empty($image)) {
@@ -173,7 +112,7 @@ class LazyImagePipe implements IImagePipe
 
         if (!$ready) {
             if (file_exists($originalFile)) {
-                register_shutdown_function(function () use ($thumbnailFile, $originalFile, $width, $height, $targetWidth, $targetHeight, $image, $format, $options, $flags) {
+                Helpers::callbackAfterRequest(function () use ($thumbnailFile, $originalFile, $width, $height, $targetWidth, $targetHeight, $image, $format, $options, $flags) {
                     try {
                         $img = $this->factory->create($originalFile);
                         if ($flags === 'crop') {
