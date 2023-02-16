@@ -3,7 +3,7 @@
 namespace Quextum\Images\Middlewares;
 
 use Nette\Caching\Cache;
-use Nette\Caching\Storage;
+use Nette\Caching\IStorage;
 use Quextum\Images\Request;
 use Quextum\Images\Result;
 
@@ -12,7 +12,7 @@ class CachingMiddleware implements Middleware
 
     private Cache $cache;
 
-    public function __construct(Storage $storage)
+    public function __construct(IStorage $storage)
     {
         $this->cache = new Cache($storage, static::class);
     }

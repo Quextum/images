@@ -62,23 +62,15 @@ class LazyImagePipe implements IImagePipe
 
     public function process(Request $request): Result
     {
-        $image = $request->image;
-        if (empty($image)) {
-            return new Result('#');
-            // throw new Nette\InvalidArgumentException('Image not specified');
+        if (empty($request->image)) {
+            throw new Nette\InvalidArgumentException('Image not specified');
         }
-        /** @var SourceImage $image */
-        if (!isset($image->width, $image->height, $image->mimeType)) {
-            throw new Nette\InvalidArgumentException('Insufficient image info. Width, Height and MimeType are necessary.');
-        }
-
         $size = $request->size;
         $flags = $request->flags;
         $format = $request->format;
         $options = $request->options;
         $strictMode = $request->strictMode;
-
-        $originalFile = $this->getOriginalFile($image->path);
+        $originalFile = $this->getOriginalFile((string)$request->image);
         if (file_exists($originalFile)) {
             $hash = hash_file('crc32b', $originalFile);
         } elseif ($strictMode) {
@@ -87,30 +79,42 @@ class LazyImagePipe implements IImagePipe
             $this->logger->log("Image not found: $originalFile");
             return new Result('#');
         }
+        $image = $request->image;
+        if ($image instanceof SourceImage) {
+            $targetWidth = $image->width;
+            $targetHeight = $image->height;
+        } else {
+            [$targetWidth, $targetHeight] = getimagesize($originalFile);
+            $image = new SourceImage(
+                (string)$request->image,
+                width: $targetWidth,
+                height: $targetHeight,
+                mimeType: @mime_content_type($originalFile)
+            );
+        }
+
         Helpers::transformFlags($flags);
 
         [$width, $height] = self::parseSize($size);
         $thumbPath = $this->getThumbnailPath($image->path, $width, $height, $options, $format, $flags, $hash);
         $thumbnailFile = $this->assetsDir . '/' . $thumbPath;
 
-
-        if ($flags === 'crop') {
-            $targetWidth = $width;
-            $targetHeight = $height;
-        } elseif ($width || $height) {
-            if ($flags & NImage::EXACT && (!$height || !$width)) {
-                [$width, $height] = NImage::calculateSize($image->width, $image->height, (int)$width, (int)$height, NImage::FIT | NImage::SHRINK_ONLY);
-            }
-            [$targetWidth, $targetHeight] = NImage::calculateSize($image->width, $image->height, (int)$width, (int)$height, $flags);
-        } else {
-            $targetWidth = $image->width;
-            $targetHeight = $image->height;
-        }
-
-
         $ready = file_exists($thumbnailFile);
-
         if (!$ready) {
+
+            if ($flags === 'crop') {
+                $targetWidth = $width;
+                $targetHeight = $height;
+            } elseif ($width || $height) {
+                if ($flags & NImage::EXACT && (!$height || !$width)) {
+                    [$width, $height] = NImage::calculateSize($image->width, $image->height, (int)$width, (int)$height, NImage::FIT | NImage::SHRINK_ONLY);
+                }
+                [$targetWidth, $targetHeight] = NImage::calculateSize($image->width, $image->height, (int)$width, (int)$height, $flags);
+            } else {
+                $targetWidth = $image->width;
+                $targetHeight = $image->height;
+            }
+
             if (file_exists($originalFile)) {
                 Helpers::callbackAfterRequest(function () use ($thumbnailFile, $originalFile, $width, $height, $targetWidth, $targetHeight, $image, $format, $options, $flags) {
                     try {
@@ -161,7 +165,7 @@ class LazyImagePipe implements IImagePipe
         return $this->path;
     }
 
-    protected function getOriginalFile(string $image)
+    protected function getOriginalFile(string $image): string
     {
         return $this->sourceDir . '/' . $image;
     }
@@ -176,14 +180,11 @@ class LazyImagePipe implements IImagePipe
         return [$width ?: null, $height ?: null];
     }
 
-    /**
-     * @throws \JsonException
-     */
     protected function getThumbnailPath(string $image, $width, $height, $options, $format, $flags, $hash): string
     {
         $spec = ($width || $height) ? '_' . ($height ? $width . 'x' . $height : $width) : null;
         if ($options) {
-            $spec .= '_' . substr((string)crc32(json_encode($options, JSON_THROW_ON_ERROR)), 0, 4);
+            $spec .= '_' . substr(crc32(json_encode($options)), 0, 4);
         }
         $info = pathinfo($image);
         $dirname = trim($info['dirname'], './');
@@ -192,6 +193,5 @@ class LazyImagePipe implements IImagePipe
         $ext = $format ? Nette\Utils\Strings::lower($format) : $info['extension'];
         return Helpers::webalizePath($dirname . $filename . '_' . $flags . $spec . '.' . $hash . '.' . $ext);
     }
-
 
 }

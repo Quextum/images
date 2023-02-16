@@ -29,8 +29,11 @@ class ImagesExtension extends Nette\DI\CompilerExtension
                 ->default(['default' => 90])->mergeDefaults(),
             'pipe' => Nette\Schema\Expect::string(ImagePipe::class),
             'middlewares' => Nette\Schema\Expect::arrayOf(Nette\Schema\Expect::anyOf(
-                Nette\Schema\Expect::type(Middleware::class),
+                Nette\Schema\Expect::type(Nette\DI\Definitions\Statement::class),
                 Nette\Schema\Expect::type('callable'),
+                Nette\Schema\Expect::type('string')->assert('class_exists')->assert(function ($class) {
+                    return (new \ReflectionClass($class))->implementsInterface(Middleware::class);
+                }, 'Class must implement interface ' . Middleware::class),
             ))->default([
                 new Nette\DI\Definitions\Statement(CachingMiddleware::class)
             ]),
@@ -64,8 +67,9 @@ class ImagesExtension extends Nette\DI\CompilerExtension
             ->setType($config->pipe)
             ->addTag(Nette\DI\Extensions\InjectExtension::TAG_INJECT);
 
+
         $this->executor = $builder->addDefinition($this->prefix('executor'))
-            ->setFactory(Executor::class, [$pipe, $config->middlewares]);
+            ->setFactory(Executor::class, [$pipe, array_reverse($config->middlewares)]);
 
         $builder->addDefinition($this->prefix('storage'))
             ->setFactory($config->storage, [$config->sourceDir])

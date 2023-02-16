@@ -60,11 +60,10 @@ class ImagePipe implements IImagePipe
 
     public function process(Request $request): Result
     {
-        $image = $request->image;
+        $image = (string) $request->image;
         if (empty($image)) {
-            return new Result('#');
+            throw new Nette\InvalidArgumentException('Image not specified');
         }
-
         $size = $request->size;
         $flags = $request->flags;
         $format = $request->format;

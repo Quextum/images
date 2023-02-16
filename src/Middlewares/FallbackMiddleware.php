@@ -28,15 +28,17 @@ class FallbackMiddleware implements Middleware
     public function __invoke(Request $request, callable $next): Result
     {
         try {
+            $request->strictMode = true;
             return $next($request);
         } catch (FileNotFoundException $exception) {
-            $image = $this->getFallbackImage($request->image);
             try {
+                $image = $this->getFallbackImage($request->image);
                 $request->image = $image;
                 return $next($request);
             } catch (FileNotFoundException $exception) {
                 $image = $this->getFallbackImage(null);
                 $request->image = $image;
+                $request->strictMode = false;
                 return $next($request);
             }
         }
