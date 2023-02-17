@@ -8,7 +8,7 @@ use JetBrains\PhpStorm\Pure;
 use Nette\Utils\Image;
 use function is_string;
 
-class NImageHandler implements IImageHandler
+class NetteImageHandler implements ImageHandler
 {
 
     public const FORMATS = ['jpeg' => Image::JPEG, 'jpg' => Image::JPEG, 'png' => Image::PNG, 'gif' => Image::GIF, 'webp' => Image::WEBP];
@@ -25,11 +25,6 @@ class NImageHandler implements IImageHandler
         }
     }
 
-    /** @throws ImageException */
-    public static function create(string $path): static
-    {
-        return new self($path);
-    }
 
     public static function getSupportedFormats(): array
     {

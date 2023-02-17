@@ -16,20 +16,23 @@
     "nette/utils": "^3.0 || ^4.0",
     "nette/http": "^3.0",
     "nette/caching": "^3.0",
-    "nette/schema": "^1.0",
+    "nette/schema": "^1.2",
     "nette/di": "^3.0",
     "ext-json": "*"
   },
   "require-dev": {
     "nette/tester": "^2.0",
     "phpstan/phpstan": "^1.4",
+    "tracy/tracy": ">=2.6",
     "jetbrains/phpstorm-attributes": "^1.0",
-    "latte/latte": "^2.10 || ^3.0"
+    "latte/latte": "^2.10 || ^3.0",
+    "jcupitt/vips": "^2.1"
   },
   "suggest": {
     "nette/schema": ">=1.2",
-    "tracy/tracy": ">=2.6",
-    "ext-imagick": "*"
+    "ext-imagick": "*",
+    "ext-vips": "*",
+    "ext-ffi": "*"
   },
   "autoload": {
     "psr-4": {

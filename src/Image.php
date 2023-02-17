@@ -13,63 +13,63 @@ use Nette;
 class Image
 {
 
-	use Nette\SmartObject;
+    use Nette\SmartObject;
 
-	/** @var string */
-	private $file;
+    /** @var string */
+    private $file;
 
-	/** @var Size */
-	private $size;
-
-
-	/**
-	 * @param string $file
-	 */
-	public function __construct($file)
-	{
-		$this->file = $file;
-		$this->size = Size::fromFile($file);
-	}
+    /** @var Size */
+    private $size;
 
 
-	/**
-	 * @return bool
-	 */
-	public function exists()
-	{
-		return file_exists($this->file);
-	}
+    /**
+     * @param string $file
+     */
+    public function __construct($file)
+    {
+        $this->file = $file;
+        $this->size = Size::fromFile($file);
+    }
 
-	/**
-	 * @return Size
-	 */
-	public function getSize()
-	{
-		return $this->size;
-	}
 
-	/**
-	 * @return string
-	 */
-	public function __toString()
-	{
-		return $this->getBasename();
-	}
+    /**
+     * @return bool
+     */
+    public function exists()
+    {
+        return file_exists($this->file);
+    }
 
-	/**
-	 * @return string
-	 */
-	public function getBasename()
-	{
-		return basename($this->getFile());
-	}
+    /**
+     * @return Size
+     */
+    public function getSize()
+    {
+        return $this->size;
+    }
 
-	/**
-	 * @return float|int
-	 */
-	public function getFile()
-	{
-		return $this->file;
-	}
+    /**
+     * @return string
+     */
+    public function __toString()
+    {
+        return $this->getBasename();
+    }
+
+    /**
+     * @return string
+     */
+    public function getBasename()
+    {
+        return basename($this->getFile());
+    }
+
+    /**
+     * @return float|int
+     */
+    public function getFile()
+    {
+        return $this->file;
+    }
 
 }

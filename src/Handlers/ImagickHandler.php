@@ -5,7 +5,7 @@ namespace Quextum\Images\Handlers;
 use Imagick;
 use Nette\Utils\Image;
 
-final class ImagickHandler implements IImageHandler
+final class ImagickHandler implements ImageHandler
 {
 
     public const QUALITY = 100;
@@ -16,28 +16,14 @@ final class ImagickHandler implements IImageHandler
 
     private Imagick $image;
 
-    /**
-     * GPHandler constructor.
-     * @param string $path
-     * @throws ImageException
-     */
+    /** @throws ImageException */
     public function __construct(string $path)
     {
         try {
             $this->image = new Imagick($path);
         } catch (\ImagickException $e) {
-            throw new ImageException('Unable to create image',previous: $e);
+            throw new ImageException('Unable to create image', previous: $e);
         }
-    }
-
-    /**
-     * @param string $path
-     * @return ImagickHandler
-     * @throws ImageException
-     */
-    public static function create(string $path): static
-    {
-        return new static($path);
     }
 
     public static function getSupportedFormats(): array
@@ -68,7 +54,7 @@ final class ImagickHandler implements IImageHandler
             [$x, $y, $width, $height] = Image::calculateCutout($this->getWidth(), $this->getHeight(), $x, $y, $width, $height);
             $this->image->cropImage($width ? (int)$width : null, $height ? (int)$height : null, $x, $y);
         } catch (\ImagickException $e) {
-            throw new ImageException('Unable to crop image',previous: $e);
+            throw new ImageException('Unable to crop image', previous: $e);
         }
         return $this;
     }
@@ -110,7 +96,7 @@ final class ImagickHandler implements IImageHandler
             $this->image->stripImage();
             $this->image->writeImage($path);
         } catch (\ImagickException $e) {
-            throw new ImageException('Unable to save image',previous: $e);
+            throw new ImageException('Unable to save image', previous: $e);
         }
         return $this;
     }
@@ -148,6 +134,8 @@ final class ImagickHandler implements IImageHandler
 
     public static function isSupported(): bool
     {
-        return extension_loaded('imagick');
+        return
+            extension_loaded('imagick') &&
+            class_exists(Imagick::class);
     }
 }

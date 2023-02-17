@@ -22,8 +22,8 @@ class Executor
 
 
     public function __construct(
-        private  IImagePipe $pipe,
-        private  array      $middlewares
+        private IImagePipe $pipe,
+        private array      $middlewares
     )
     {
     }

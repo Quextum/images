@@ -6,5 +6,4 @@ class ImageException extends \Exception
 {
 
 
-
 }

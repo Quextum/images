@@ -10,10 +10,10 @@ use Tracy\ILogger;
 final class BarDumpLogger implements ILogger
 {
 
-	function log($value, $level = self::INFO)
-	{
-		if (class_exists(Debugger::class)) {
-			Debugger::barDump($value);
-		}
-	}
+    function log($value, $level = self::INFO)
+    {
+        if (class_exists(Debugger::class)) {
+            Debugger::barDump($value);
+        }
+    }
 }

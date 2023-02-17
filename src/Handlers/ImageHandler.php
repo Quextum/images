@@ -3,16 +3,12 @@
 namespace Quextum\Images\Handlers;
 
 
-interface IImageHandler
+interface ImageHandler
 {
-    /**
-     * @param string $path
-     * @return IImageHandler
-     * @throws ImageException
-     */
-    public static function create(string $path): IImageHandler;
 
     public static function getSupportedFormats(): array;
+
+    public static function isSupported(): bool;
 
     public function resize($width, $height, $flag, array $options = null): static;
 
@@ -23,7 +19,5 @@ interface IImageHandler
     public function getWidth(): int;
 
     public function getHeight(): int;
-
-    public static function isSupported(): bool;
 
 }

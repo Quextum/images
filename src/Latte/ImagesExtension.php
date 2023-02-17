@@ -23,9 +23,9 @@ class ImagesExtension extends Latte\Extension
     ];
 
     public function __construct(
-        private  Executor $executor,
-        private  string   $macro,
-        private  array    $tags = self::TAGS,
+        private Executor $executor,
+        private string   $macro,
+        private array    $tags = self::TAGS,
     )
     {
     }

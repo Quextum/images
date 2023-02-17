@@ -3,13 +3,13 @@
 namespace Quextum\Images;
 
 use Nette;
-use SplFileInfo;
-use RuntimeException;
+use Nette\Http\FileUpload;
+use Nette\InvalidArgumentException;
+use Nette\InvalidStateException;
 use Nette\Utils\Finder;
 use Nette\Utils\Random;
-use Nette\Http\FileUpload;
-use Nette\InvalidStateException;
-use Nette\InvalidArgumentException;
+use RuntimeException;
+use SplFileInfo;
 
 
 /**
@@ -94,7 +94,7 @@ class Storage
     public function save($content, $filename)
     {
         $path = $this->generatePath($filename);
-        Nette\Utils\FileSystem::write($path,$content,0777);
+        Nette\Utils\FileSystem::write($path, $content, 0777);
         return new Image($path);
     }
 
@@ -108,7 +108,7 @@ class Storage
             throw new InvalidStateException('Filename was not provided');
         }
         /** @var $file SplFileInfo */
-        foreach (Finder::findFiles($filename)->from(rtrim("$this->imagesDir/$this->namespace",'/')) as $file) {
+        foreach (Finder::findFiles($filename)->from(rtrim("$this->imagesDir/$this->namespace", '/')) as $file) {
             @unlink($file->getPathname());
         }
         $this->namespace = null;

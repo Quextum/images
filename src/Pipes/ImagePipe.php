@@ -6,9 +6,9 @@ use Nette;
 use Nette\Utils\FileSystem;
 use Nette\Utils\Image as NImage;
 use Quextum\Images\FileNotFoundException;
-use Quextum\Images\Handlers\IImageHandler;
 use Quextum\Images\Handlers\ImageException;
-use Quextum\Images\Handlers\ImageFactory;
+use Quextum\Images\Handlers\ImageHandler;
+use Quextum\Images\Handlers\ImageHandlerFactory;
 use Quextum\Images\Request;
 use Quextum\Images\Result;
 use Quextum\Images\Utils\BarDumpLogger;
@@ -16,7 +16,7 @@ use Quextum\Images\Utils\Helpers;
 use Tracy\ILogger;
 
 /**
- * @method onBeforeSave(IImageHandler $img, string $thumbnailPath, string $image, $width, $height, int|string|null $flags)
+ * @method onBeforeSave(ImageHandler $img, string $thumbnailPath, string $image, $width, $height, int|string|null $flags)
  * @method onAfterSave(string $thumbnailPath)
  */
 class ImagePipe implements IImagePipe
@@ -29,17 +29,17 @@ class ImagePipe implements IImagePipe
     protected string $assetsDir;
     protected string $sourceDir;
     protected string $path;
-    protected ImageFactory $factory;
+    protected ImageHandlerFactory $factory;
     protected ILogger $logger;
     protected array $quality;
 
-    public function __construct(string $assetsDir, string $sourceDir, string $wwwDir, string $handlerClass, array $quality, Nette\Http\Request $httpRequest)
+    public function __construct(string $assetsDir, string $sourceDir, string $wwwDir, ImageHandlerFactory $factory, array $quality, Nette\Http\Request $httpRequest)
     {
         $this->sourceDir = $sourceDir;
         $this->assetsDir = $assetsDir;
         $this->quality = $quality;
         $this->path = rtrim($httpRequest->url->basePath, '/') . str_replace($wwwDir, '', $this->assetsDir);
-        $this->factory = new ImageFactory($handlerClass);
+        $this->factory = $factory;
         $this->setLogger(new BarDumpLogger());
     }
 
@@ -60,7 +60,7 @@ class ImagePipe implements IImagePipe
 
     public function process(Request $request): Result
     {
-        $image = (string) $request->image;
+        $image = (string)$request->image;
         if (empty($image)) {
             throw new Nette\InvalidArgumentException('Image not specified');
         }
