@@ -15,6 +15,7 @@ use Quextum\Images\Result;
 use Quextum\Images\Utils\BarDumpLogger;
 use Quextum\Images\Utils\Helpers;
 use Quextum\Images\Utils\SourceImage;
+use Tracy\Debugger;
 use Tracy\ILogger;
 
 /**
@@ -35,14 +36,16 @@ class LazyImagePipe implements IImagePipe
     protected ILogger $logger;
     protected array $quality;
 
-    public function __construct(string $assetsDir, string $sourceDir, string $wwwDir, ImageHandlerFactory $factory, array $quality, Nette\Http\Request $httpRequest)
+    public function __construct(string $assetsDir, string $sourceDir, string $wwwDir, ImageHandlerFactory $factory, array $quality,
+                                ILogger $logger,
+                                Nette\Http\Request $httpRequest)
     {
         $this->sourceDir = $sourceDir;
         $this->assetsDir = $assetsDir;
         $this->quality = $quality;
         $this->path = rtrim($httpRequest->url->basePath, '/') . str_replace($wwwDir, '', $this->assetsDir);
         $this->factory = $factory;
-        $this->setLogger(new BarDumpLogger());
+        $this->setLogger($logger);
     }
 
     public function setLogger(ILogger $logger): void
@@ -77,7 +80,7 @@ class LazyImagePipe implements IImagePipe
             throw new FileNotFoundException($originalFile);
         } else {
             $this->logger->log("Image not found: $originalFile");
-            return new Result('#');
+            return new Result(null);
         }
         $image = $request->image;
         if ($image instanceof SourceImage) {
@@ -117,6 +120,7 @@ class LazyImagePipe implements IImagePipe
 
             if (file_exists($originalFile)) {
                 Helpers::callbackAfterRequest(function () use ($thumbnailFile, $originalFile, $width, $height, $targetWidth, $targetHeight, $image, $format, $options, $flags) {
+                    set_time_limit(1000);
                     try {
                         $img = $this->factory->create($originalFile);
                         if ($flags === 'crop') {
@@ -146,6 +150,7 @@ class LazyImagePipe implements IImagePipe
             'avif' => 'image/avif',
             'bmp' => 'image/bmp',
             'webp' => 'image/webp',
+            'gif' => 'image/gif',
         };
 
         return Result::from($this->getPath() . '/' . $thumbPath, $originalFile, $thumbnailFile, [

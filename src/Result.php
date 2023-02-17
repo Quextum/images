@@ -12,7 +12,7 @@ class Result implements \Stringable
 
     use SmartObject;
 
-    public string $src;
+    public ?string $src;
     public ?string $originalFile;
     public ?string $thumbnailFile;
     public ?array $size;
@@ -21,13 +21,13 @@ class Result implements \Stringable
 
     /**
      * Result constructor.
-     * @param string $src
+     * @param string|null $src
      * @param string|null $originalFile
      * @param string|null $thumbnailFile
      * @param array|null $size
      * @param string|null $mime
      */
-    public function __construct(string $src, ?string $originalFile = null, ?string $thumbnailFile = null, ?array $size = null, ?string $mime = null)
+    public function __construct(?string $src, ?string $originalFile = null, ?string $thumbnailFile = null, ?array $size = null, ?string $mime = null)
     {
         $this->src = $src;
         $this->originalFile = $originalFile;
@@ -43,7 +43,7 @@ class Result implements \Stringable
 
     public function __toString(): string
     {
-        return $this->src;
+        return $this->src?:'#';
     }
 
     public function setReady(bool $ready): static

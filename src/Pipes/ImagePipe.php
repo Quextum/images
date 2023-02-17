@@ -33,14 +33,17 @@ class ImagePipe implements IImagePipe
     protected ILogger $logger;
     protected array $quality;
 
-    public function __construct(string $assetsDir, string $sourceDir, string $wwwDir, ImageHandlerFactory $factory, array $quality, Nette\Http\Request $httpRequest)
+    public function __construct(string $assetsDir, string $sourceDir, string $wwwDir, ImageHandlerFactory $factory, array $quality,
+                                ILogger $logger,
+                                Nette\Http\Request $httpRequest
+    )
     {
         $this->sourceDir = $sourceDir;
         $this->assetsDir = $assetsDir;
         $this->quality = $quality;
         $this->path = rtrim($httpRequest->url->basePath, '/') . str_replace($wwwDir, '', $this->assetsDir);
         $this->factory = $factory;
-        $this->setLogger(new BarDumpLogger());
+        $this->setLogger($logger);
     }
 
     public function setLogger(ILogger $logger): void
@@ -77,7 +80,7 @@ class ImagePipe implements IImagePipe
             throw new FileNotFoundException($originalFile);
         } else {
             $this->logger->log("Image not found: $originalFile");
-            return new Result('#');
+            return new Result(null);
         }
         Helpers::transformFlags($flags);
 

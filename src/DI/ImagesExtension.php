@@ -18,7 +18,11 @@ use Quextum\Images\Middlewares\Middleware;
 use Quextum\Images\Pipes\Executor;
 use Quextum\Images\Pipes\ImagePipe;
 use Quextum\Images\Storage;
+use Quextum\Images\Utils\BarDumpLogger;
+use Quextum\Images\Utils\DummyLogger;
 use ReflectionClass;
+use Tracy\Debugger;
+use Tracy\ILogger;
 
 /**
  * Class ImagesExtension
@@ -52,6 +56,8 @@ class ImagesExtension extends Nette\DI\CompilerExtension
                 ->default([
                     new Nette\DI\Definitions\Statement(CachingMiddleware::class)
                 ]),
+            'logger' => self::interfaceStatement(ILogger::class)
+                ->default(class_exists(Debugger::class) ? BarDumpLogger::class : DummyLogger::class),
             'storage' => Nette\Schema\Expect::string(Storage::class),
             'handler' => Nette\Schema\Expect::listOf($imageHandlerType)
                 ->default([
@@ -68,7 +74,7 @@ class ImagesExtension extends Nette\DI\CompilerExtension
             'tags' => Nette\Schema\Expect::arrayOf(
                 Nette\Schema\Expect::listOf(Nette\Schema\Expect::string())
             )->default(ImagesLatteExtension::TAGS)
-             ->mergeDefaults(),
+                ->mergeDefaults(),
         ]);
     }
 
@@ -76,6 +82,18 @@ class ImagesExtension extends Nette\DI\CompilerExtension
     {
         return Nette\Schema\Expect::string()
             ->assert(self::assertInterface($interface), "Class must implement interface $interface");
+    }
+
+    public static function interfaceStatement(string $interface): Nette\Schema\Elements\AnyOf
+    {
+        $assert = self::assertInterface($interface);
+        return Nette\Schema\Expect::anyOf(
+            Nette\Schema\Expect::type(Nette\DI\Definitions\Statement::class)
+                ->assert(function (Nette\DI\Definitions\Statement $statement) use ($assert) {
+                    return $assert($statement->entity);
+                }, "Class must implement interface $interface"),
+            self::assertInterface($interface)
+        );
     }
 
     public static function assertInterface(string $interface): callable

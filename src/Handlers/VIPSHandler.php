@@ -4,6 +4,7 @@ namespace Quextum\Images\Handlers;
 
 use Jcupitt\Vips;
 use Nette\Utils\Image;
+use Nette\Utils\Strings;
 
 class VIPSHandler implements ImageHandler
 {
@@ -23,7 +24,7 @@ class VIPSHandler implements ImageHandler
     public function __construct(string $path)
     {
         try {
-            $this->image = Vips\Image::newFromFile($path, ['access' => 'sequential']);
+            $this->image = Vips\Image::newFromFile($path . '[n=-1]', ['access' => 'sequential']);
         } catch (Vips\Exception $e) {
             throw new ImageException('Unable to create image', previous: $e);
         }
@@ -79,11 +80,21 @@ class VIPSHandler implements ImageHandler
     public function save(string $path, int $quality = self::QUALITY, $format = null): static
     {
         try {
-            $this->image->writeToFile($path, ['Q' => $quality, 'strip' => true]);
+            $this->image->writeToFile($path, $this->saveOptions($path, $quality, $format));
         } catch (Vips\Exception $e) {
             throw new ImageException('Unable to save image', previous: $e);
         }
         return $this;
+    }
+
+    public function saveOptions(string $path, int $quality = self::QUALITY, $format = null): array
+    {
+        $format = $format ?: Strings::after($path, '.', -1);
+        return ['strip' => true] +
+            match ($format) {
+                'gif' => [],
+                default => ['Q' => $quality]
+            };
     }
 
     public function getImage(): Vips\Image
