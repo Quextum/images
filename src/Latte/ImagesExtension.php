@@ -15,19 +15,35 @@ use Quextum\Images\Pipes\Executor;
 class ImagesExtension extends Latte\Extension
 {
 
-    private const TAGS = [
-        'meta' => 'content',
-        'a' => 'href',
-        'img' => 'src',
-        'source' => 'srcset',
+    public const TAGS = [
+        'meta' => ['content'],
+        'a' => ['href'],
+        'img' => ['src', 'width', 'height', 'type'],
+        'source' => ['srcset'],
     ];
 
     public function __construct(
-        private Executor $executor,
-        private string   $macro,
-        private array    $tags = self::TAGS,
+        private Executor    $executor,
+        private string      $macro,
+        private string|null|false $filter,
+        private string|null|false $function,
+        private array       $tags = self::TAGS,
     )
     {
+    }
+
+    public function getFilters(): array
+    {
+        return $this->filter ? [
+            $this->filter => [$this->executor, 'request'],
+        ] : [];
+    }
+
+    public function getFunctions(): array
+    {
+        return $this->function ? [
+            $this->function => [$this->executor, 'request'],
+        ] : [];
     }
 
     public function getTags(): array
@@ -76,14 +92,15 @@ class ImagesExtension extends Latte\Extension
             {
                 $shit = implode(',', array_fill(0, count($this->arguemnts), '%node'));
                 if ($this->nAttr) {
-                    $attr = $this->tags[$this->tag] ?? throw new InvalidArgumentException("Tag $this->tag is not supported. Supported are: " . implode(', ', array_keys($this->tags)));
-                    $attributes = [$attr => 'src'];
-                    switch ($this->tag) {
-                        case 'img':
-                            $attributes += ['width' => 'size[0]', 'height' => 'size[1]'];
-                        case 'source':
-                            $attributes += ['type' => 'mime'];
-                    }
+                    $params = $this->tags[$this->tag] ?? throw new InvalidArgumentException("Tag $this->tag is not supported. Supported are: " . implode(', ', array_keys($this->tags)));
+                    $attr = $params[0];
+                    $knownAttrs = [
+                        $attr => 'src',
+                        'width' => 'size[0]',
+                        'height' => 'size[1]',
+                        'type' => 'mime'
+                    ];
+                    $attributes = array_intersect_key($knownAttrs, array_flip($params));
                     $attrString = implode(' ', Arrays::map($attributes, static fn($source, $attr) => "echo(\" $attr=\".%escape(\$response->$source));"));
                     return $context->format("%line \$response = \$this->global->{$this->pipeName}->request($shit) ;  $attrString ", $this->position, ...$this->arguemnts);
                 }

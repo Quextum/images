@@ -18,6 +18,7 @@ use Quextum\Images\Middlewares\Middleware;
 use Quextum\Images\Pipes\Executor;
 use Quextum\Images\Pipes\ImagePipe;
 use Quextum\Images\Storage;
+use ReflectionClass;
 
 /**
  * Class ImagesExtension
@@ -62,6 +63,12 @@ class ImagesExtension extends Nette\DI\CompilerExtension
             'sourceDir' => Nette\Schema\Expect::string()->assert('is_dir')->assert('is_readable'),
             'assetsDir' => Nette\Schema\Expect::string()->assert('is_dir')->assert('is_writable'),
             'macro' => Nette\Schema\Expect::string('img'),
+            'filter' => Nette\Schema\Expect::anyOf(Nette\Schema\Expect::string(), Nette\Schema\Expect::bool())->default(true),
+            'function' => Nette\Schema\Expect::anyOf(Nette\Schema\Expect::string(), Nette\Schema\Expect::bool())->default(true),
+            'tags' => Nette\Schema\Expect::arrayOf(
+                Nette\Schema\Expect::listOf(Nette\Schema\Expect::string())
+            )->default(ImagesLatteExtension::TAGS)
+             ->mergeDefaults(),
         ]);
     }
 
@@ -74,7 +81,7 @@ class ImagesExtension extends Nette\DI\CompilerExtension
     public static function assertInterface(string $interface): callable
     {
         return static function (string $class) use ($interface) {
-            return class_exists($class) && (new \ReflectionClass($class))->implementsInterface($interface);
+            return class_exists($class) && (new ReflectionClass($class))->implementsInterface($interface);
         };
     }
 
@@ -114,7 +121,7 @@ class ImagesExtension extends Nette\DI\CompilerExtension
             } else {
                 $class = $handlerCandidate;
             }
-            $rf = new \ReflectionClass($class);
+            $rf = new ReflectionClass($class);
             if ($rf->implementsInterface(ImageHandlerFactory::class)) {
                 $handlerStatement = $handlerStatement ?? new Nette\DI\Definitions\Statement($class);
                 $supported = true;
@@ -159,7 +166,11 @@ class ImagesExtension extends Nette\DI\CompilerExtension
             if (class_exists(Latte\Extension::class)) {
                 $latte->addSetup('$service->addExtension(?)', [
                     new Nette\DI\Definitions\Statement(ImagesLatteExtension::class, [
-                        $this->executor, $config->macro
+                        'executor' => $this->executor,
+                        'macro' => $config->macro,
+                        'filter' => $config->filter === true ? $config->macro : $config->filter,
+                        'function' => $config->function === true ? $config->macro : $config->function,
+                        'tags' => $config->tags,
                     ])
                 ]);
             } else {
