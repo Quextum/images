@@ -120,4 +120,8 @@ class VIPSHandler implements ImageHandler
             return false;
         }
     }
+	public function destroy(): void
+	{
+		$this->image->unref();
+	}
 }

@@ -20,4 +20,5 @@ interface ImageHandler
 
     public function getHeight(): int;
 
+	public function destroy(): void;
 }

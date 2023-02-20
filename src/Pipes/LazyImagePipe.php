@@ -22,7 +22,7 @@ use Tracy\ILogger;
  * @method onBeforeSave(ImageHandler $img, string $thumbnailPath, string $image, $width, $height, int|string|null $flags)
  * @method onAfterSave(string $thumbnailPath)
  */
-class LazyImagePipe implements IImagePipe
+class LazyImagePipe implements ImagePipe
 {
     use Nette\SmartObject;
 
@@ -147,7 +147,11 @@ class LazyImagePipe implements IImagePipe
                         $this->onAfterSave($thumbnailFile);
                     } catch (ImageException $exception) {
                         $this->logger->log($exception);
-                    }
+                    } finally {
+						if(isset($img)) {
+							$img->destroy();
+						}
+					}
                 });
             } elseif ($strictMode) {
                 throw new FileNotFoundException("File '$originalFile' not found");

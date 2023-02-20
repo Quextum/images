@@ -94,7 +94,7 @@ final class ImagickHandler implements ImageHandler
             $this->image->setImageCompressionQuality($quality);
             //$this->image->setCompression(\Imagick::COMPRESSION_);
             $this->image->stripImage();
-            $this->image->writeImage($path);
+            $this->image->writeImages($path,true);
         } catch (\ImagickException $e) {
             throw new ImageException('Unable to save image', previous: $e);
         }
@@ -138,4 +138,10 @@ final class ImagickHandler implements ImageHandler
             extension_loaded('imagick') &&
             class_exists(Imagick::class);
     }
+
+	public function destroy(): void
+	{
+		$this->image->clear();
+		$this->image->destroy();
+	}
 }

@@ -2,7 +2,6 @@
 
 namespace Quextum\Images\Pipes;
 
-use Closure;
 use Exception;
 use Nette\SmartObject;
 use Quextum\Images\Request;
@@ -21,7 +20,7 @@ class Executor
     public array $onAfterRequest;
 
     public function __construct(
-        private IImagePipe $pipe,
+        private ImagePipe $pipe,
         private array      $middlewares
     )
     {
