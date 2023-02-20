@@ -20,7 +20,6 @@ class Executor
     public array $onBeforeRequest;
     public array $onAfterRequest;
 
-
     public function __construct(
         private IImagePipe $pipe,
         private array      $middlewares
@@ -47,7 +46,7 @@ class Executor
         $error = null;
         try {
             $this->onBeforeRequest($request);
-            $action = Closure::fromCallable([$this->pipe, 'process']);
+            $action = [$this->pipe, 'process'];
             foreach ($this->middlewares as $middleware) {
                 $action = static fn(Request $request): Result => $middleware($request, $action);
             }

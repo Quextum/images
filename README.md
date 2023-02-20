@@ -1,5 +1,7 @@
 # Quextum Images
-#Usage
+
+# Usage
+
 ```neon
 extensions:
 	images: Quextum\Images\DI\ImagesExtension
@@ -9,9 +11,12 @@ images:
 	assetsDir: %wwwDir%/media
 ```
 
-#Callbacks
-##Before
+# Callbacks
+
+## Before
+
 Transform arguments
+
 ```php 
 function transformArguments(Quextum\Images\Request $request)
 {
@@ -24,6 +29,7 @@ function transformArguments(Quextum\Images\Request $request)
     }
 }
 ```
+
 ```neon
 decorator:
     Quextum\Images\Pipes\ImagePipe:
@@ -31,8 +37,10 @@ decorator:
             - '$onBeforeRequest[]' = transformArguments
 ```
 
-##After
+## After
+
 Optimizing images with Spatie optimizer
+
 ```neon
 services:
 	optimizer: Spatie\ImageOptimizer\OptimizerChainFactory::create
@@ -41,4 +49,24 @@ decorator:
     Quextum\Images\Pipes\ImagePipe:
         setup:
             - '$onAfterSave[]' = [@optimizer,optimize]
+```
 
+## Quality
+
+```neon
+images:
+	quality:
+		default: 90
+		jpg: 90
+		webp: 100
+		avif: 100
+```
+
+## Middlewares
+[CachingMiddleware](src/Middlewares/CachingMiddleware.php) is used as default.
+### Fallback image middleware
+```neon
+images:
+	middlewares:
+	    - Quextum\Images\Middlewares\FallbackMiddleware
+```

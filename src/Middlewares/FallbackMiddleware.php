@@ -9,38 +9,45 @@ use Quextum\Images\Result;
 class FallbackMiddleware implements Middleware
 {
 
-    public function getFallbackImage(mixed $image): string
-    {
-        $namespace = 'default';
-        if (is_string($image) && count($parts = explode('/', $image, 1)) > 1) {
-            $namespace = $parts[0];
-        }
-        if (is_array($image) && isset($image['namespace'])) {
-            $namespace = $image['namespace'];
-        }
-        if (is_object($image) && isset($image->namespace)) {
-            $namespace = $image->namespace;
-        }
-        return "fallbacks/$namespace.jpg";
-    }
+	/** @var Closure(Request|null): string */
+	private $callback;
+
+	public function __construct(callable $callback = null)
+	{
+		$this->callback = $callback ?: [$this, 'getFallbackImage'];
+	}
+
+	public function getFallbackImage(Request|null $request): string
+	{
+		$image= $request?->image;
+		$namespace = 'default';
+		if (is_string($image) && count($parts = explode('/', $image, 1)) > 1) {
+			$namespace = $parts[0];
+		}
+		if (is_array($image) && isset($image['namespace'])) {
+			$namespace = $image['namespace'];
+		}
+		if (is_object($image) && isset($image->namespace)) {
+			$namespace = $image->namespace;
+		}
+		return "fallbacks/$namespace.jpg";
+	}
 
 
-    public function __invoke(Request $request, callable $next): Result
-    {
-        try {
-            $request->strictMode = true;
-            return $next($request);
-        } catch (FileNotFoundException $exception) {
-            try {
-                $image = $this->getFallbackImage($request->image);
-                $request->image = $image;
-                return $next($request);
-            } catch (FileNotFoundException $exception) {
-                $image = $this->getFallbackImage(null);
-                $request->image = $image;
-                $request->strictMode = false;
-                return $next($request);
-            }
-        }
-    }
+	public function __invoke(Request $request, callable $next): Result
+	{
+		try {
+			$request->strictMode = true;
+			return $next($request);
+		} catch (FileNotFoundException $exception) {
+			try {
+				$request->image = ($this->callback)($request);
+				return $next($request);
+			} catch (FileNotFoundException $exception) {
+				$request->image = ($this->callback)(null);
+				$request->strictMode = false;
+				return $next($request);
+			}
+		}
+	}
 }

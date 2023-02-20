@@ -35,14 +35,22 @@ class LazyImagePipe implements IImagePipe
     protected ImageHandlerFactory $factory;
     protected ILogger $logger;
     protected array $quality;
+	protected int|null $timeout;
 
-    public function __construct(string $assetsDir, string $sourceDir, string $wwwDir, ImageHandlerFactory $factory, array $quality,
-                                ILogger $logger,
-                                Nette\Http\Request $httpRequest)
+    public function __construct(
+        string $assetsDir,
+        string $sourceDir,
+        string $wwwDir,
+        ImageHandlerFactory $factory,
+        array $quality,
+        ILogger $logger,
+        Nette\Http\Request $httpRequest,
+		int|null $timeout = null)
     {
         $this->sourceDir = $sourceDir;
         $this->assetsDir = $assetsDir;
         $this->quality = $quality;
+		$this->timeout = $timeout;
         $this->path = rtrim($httpRequest->url->basePath, '/') . str_replace($wwwDir, '', $this->assetsDir);
         $this->factory = $factory;
         $this->setLogger($logger);
@@ -62,6 +70,11 @@ class LazyImagePipe implements IImagePipe
     {
         return $this->sourceDir;
     }
+
+	public function setTimeout(?int $timeout): void
+	{
+		$this->timeout = $timeout;
+	}
 
     public function process(Request $request): Result
     {
@@ -120,7 +133,7 @@ class LazyImagePipe implements IImagePipe
 
             if (file_exists($originalFile)) {
                 Helpers::callbackAfterRequest(function () use ($thumbnailFile, $originalFile, $width, $height, $targetWidth, $targetHeight, $image, $format, $options, $flags) {
-                    set_time_limit(1000);
+                   $this->timeout && set_time_limit($this->timeout);
                     try {
                         $img = $this->factory->create($originalFile);
                         if ($flags === 'crop') {
@@ -161,10 +174,6 @@ class LazyImagePipe implements IImagePipe
         ], $mimeType)->setReady($ready);
     }
 
-
-    /**
-     * @return string
-     */
     public function getPath(): string
     {
         return $this->path;
