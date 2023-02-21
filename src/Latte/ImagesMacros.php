@@ -3,6 +3,7 @@
 namespace Quextum\Images\Latte;
 
 use Latte\CompileException;
+use Latte\Compiler;
 use Latte\MacroNode;
 use Latte\Macros\MacroSet;
 use Latte\PhpWriter;

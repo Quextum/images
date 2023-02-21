@@ -18,7 +18,7 @@ class Request
 	/** @param \Stringable|string & mixed|SourceImage $image */
 	public function __construct(
 		mixed             $image,
-		string|array|null $size,
+		string|array|int|null $size,
 		int|string|null   $flags,
 		?string           $format,
 		?array            $options,
