@@ -12,10 +12,8 @@ use Quextum\Images\Handlers\ImageHandler;
 use Quextum\Images\Handlers\ImageHandlerFactory;
 use Quextum\Images\Request;
 use Quextum\Images\Result;
-use Quextum\Images\Utils\BarDumpLogger;
 use Quextum\Images\Utils\Helpers;
 use Quextum\Images\Utils\SourceImage;
-use Tracy\Debugger;
 use Tracy\ILogger;
 
 /**

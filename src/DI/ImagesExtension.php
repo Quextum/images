@@ -169,7 +169,7 @@ class ImagesExtension extends Nette\DI\CompilerExtension
 		}
 		$pipe = $builder->addDefinition($this->prefix('pipe'))
 			->setFactory($config->pipe, $args)
-			//->setType(ImagePipe::class)
+			->setType(ImagePipe::class)
 			->addTag(Nette\DI\Extensions\InjectExtension::TAG_INJECT);
 
 		$this->executor = $builder->addDefinition($this->prefix('executor'))

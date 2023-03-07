@@ -97,21 +97,22 @@ class ImagesExtension extends Latte\Extension
 
 			public function print(Latte\Compiler\PrintContext $context): string
 			{
-				$shit = implode(',', array_fill(0, count($this->arguments), '%node'));
+				$args = implode(',', array_fill(0, count($this->arguments), '%node'));
 				if ($this->nAttr) {
+
 					$params = $this->tags[$this->tag] ?? ['src'];//?? throw new InvalidArgumentException("Tag $this->tag is not supported. Supported are: " . implode(', ', array_keys($this->tags)));
 					$attr = $params[0];
 					$knownAttrs = array_diff_key([
 						$attr => '$response->src',
-						'width' => $this->attributes['height'] && !$this->attributes['width'] ? "{$this->attributes['height']}/\$response->size[1] * \$response->size[0]" : '$response->size[0]',
+						'width' =>  $this->attributes['height'] && !$this->attributes['width'] ? "{$this->attributes['height']}/\$response->size[1] * \$response->size[0]" : '$response->size[0]',
 						'height' => $this->attributes['width'] && !$this->attributes['height'] ?  "{$this->attributes['width']}/\$response->size[0] * \$response->size[1]" : '$response->size[1]',
 						'type' => '$response->mime'
 					], array_filter($this->attributes));
 					$attributes = array_intersect_key($knownAttrs, array_flip($params));
 					$attrString = implode(' ', Arrays::map($attributes, static fn($source, $attr) => "echo(\" $attr=\".%escape($source));"));
-					return $context->format("%line \$response = \$this->global->{$this->providerName}->request($shit) ;  $attrString ", $this->position, ...$this->arguments);
+					return $context->format("%line \$response = \$this->global->{$this->providerName}->request($args) ; if(\$response->src){ $attrString }; ", $this->position, ...$this->arguments);
 				}
-				return $context->format("%line \$response = \$this->global->{$this->providerName}->request($shit) ;  echo %escape(\$response->src); ", $this->position, ...$this->arguments);
+				return $context->format("%line \$response = \$this->global->{$this->providerName}->request($args) ;  echo %escape(\$response->src); ", $this->position, ...$this->arguments);
 			}
 
 			public function &getIterator(): \Generator
