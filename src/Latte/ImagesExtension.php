@@ -18,7 +18,7 @@ class ImagesExtension extends Latte\Extension
 		'meta' => ['content'],
 		'a' => ['href'],
 		'img' => ['src', 'width', 'height', 'type'],
-		'source' => ['srcset'],
+		'source' => ['srcset', 'type'],
 	];
 
 	public function __construct(
