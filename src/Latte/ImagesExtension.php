@@ -5,7 +5,7 @@ namespace Quextum\Images\Latte;
 use Latte;
 use Latte\CompileException;
 use Nette\Utils\Arrays;
-use Quextum\Images\Pipes\Executor;
+use Quextum\Images\Pipes\Provider;
 
 /**
  * Class ImagesExtension
@@ -22,11 +22,11 @@ class ImagesExtension extends Latte\Extension
 	];
 
 	public function __construct(
-		private Executor          $executor,
-		private string            $macro,
-		private string|null|false $filter,
-		private string|null|false $function,
-		private array             $tags = self::TAGS,
+		private Provider $provider,
+		private string              $macro,
+		private string|null|false   $filter,
+		private string|null|false   $function,
+		private array               $tags = self::TAGS,
 	)
 	{
 	}
@@ -34,14 +34,14 @@ class ImagesExtension extends Latte\Extension
 	public function getFilters(): array
 	{
 		return $this->filter ? [
-			$this->filter => [$this->executor, 'request'],
+			$this->filter => [$this->provider, 'request'],
 		] : [];
 	}
 
 	public function getFunctions(): array
 	{
 		return $this->function ? [
-			$this->function => [$this->executor, 'request'],
+			$this->function => [$this->provider, 'request'],
 		] : [];
 	}
 
@@ -55,7 +55,7 @@ class ImagesExtension extends Latte\Extension
 
 	public function getProviders(): array
 	{
-		return [$this->getProviderName() => $this->executor];
+		return [$this->getProviderName() => $this->provider];
 	}
 
 	public function getProviderName(): string

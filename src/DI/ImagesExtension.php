@@ -16,9 +16,9 @@ use Quextum\Images\Latte\ImagesMacros;
 use Quextum\Images\Middlewares\CachingMiddleware;
 use Quextum\Images\Middlewares\Middleware;
 use Quextum\Images\Pipes\BlockingImagePipe;
-use Quextum\Images\Pipes\Executor;
-use Quextum\Images\Pipes\IImagePipe;
 use Quextum\Images\Pipes\ImagePipe;
+use Quextum\Images\Pipes\Provider;
+use Quextum\Images\Pipes\ProviderMiddlewares;
 use Quextum\Images\Storage;
 use Quextum\Images\Utils\BarDumpLogger;
 use Quextum\Images\Utils\DummyLogger;
@@ -32,7 +32,7 @@ use Tracy\ILogger;
  */
 class ImagesExtension extends Nette\DI\CompilerExtension
 {
-	private Nette\DI\Definitions\ServiceDefinition $executor;
+	private Nette\DI\Definitions\ServiceDefinition $provider;
 
 	public function getConfigSchema(): Nette\Schema\Schema
 	{
@@ -46,6 +46,8 @@ class ImagesExtension extends Nette\DI\CompilerExtension
 				->default(['default' => 90])->mergeDefaults(),
 			'pipe' => self::interfaceStatement(ImagePipe::class)
 				->default(BlockingImagePipe::class),
+			'provider' => self::interfaceStatement(Provider::class)
+				->default(ProviderMiddlewares::class),
 			'middlewares' => Nette\Schema\Expect::arrayOf(
 				Nette\Schema\Expect::anyOf(
 					Nette\Schema\Expect::type(Nette\DI\Definitions\Statement::class),
@@ -95,7 +97,7 @@ class ImagesExtension extends Nette\DI\CompilerExtension
 				->assert(function (Nette\DI\Definitions\Statement $statement) use ($assert) {
 					return $assert($statement->entity);
 				}, "Class must implement interface $interface"),
-			self::assertInterface($interface)
+			self::interface($interface),
 		);
 	}
 
@@ -171,12 +173,13 @@ class ImagesExtension extends Nette\DI\CompilerExtension
 			->setFactory($config->pipe, $args)
 			->addTag(Nette\DI\Extensions\InjectExtension::TAG_INJECT);
 
-		$this->executor = $builder->addDefinition($this->prefix('executor'))
-			->setFactory(Executor::class, [$pipe, array_reverse($config->middlewares)]);
+		$this->provider = $builder->addDefinition($this->prefix('provider'))
+			->setFactory($config->provider, [$pipe, array_reverse($config->middlewares)])
+			->addTag(Nette\DI\Extensions\InjectExtension::TAG_INJECT);
 
 		$builder->addDefinition($this->prefix('storage'))
 			->setFactory($config->storage, [$config->sourceDir])
-			->setType($config->storage)
+			//->setType($config->storage)
 			->addTag(Nette\DI\Extensions\InjectExtension::TAG_INJECT);
 	}
 
@@ -190,7 +193,7 @@ class ImagesExtension extends Nette\DI\CompilerExtension
 			if (class_exists(Latte\Extension::class)) {
 				$latte->addSetup('$service->addExtension(?)', [
 					new Nette\DI\Definitions\Statement(ImagesLatteExtension::class, [
-						'executor' => $this->executor,
+						'provider' => $this->provider,
 						'macro' => $config->macro,
 						'filter' => $config->filter === true ? $config->macro : $config->filter,
 						'function' => $config->function === true ? $config->macro : $config->function,
@@ -201,7 +204,7 @@ class ImagesExtension extends Nette\DI\CompilerExtension
 				$macro = ImagesMacros::class . '::install';
 				$pipeName = "{$this->name}ImagePipe";
 				$latte->addSetup('?->onCompile[] = function ($engine) { ' . $macro . '($engine->getCompiler(),?,?); }', ['@self', $pipeName, $config->macro]);
-				$latte->addSetup('$service->addProvider(?,?)', [$pipeName, $this->executor]);
+				$latte->addSetup('$service->addProvider(?,?)', [$pipeName, $this->provider]);
 			}
 		}
 	}

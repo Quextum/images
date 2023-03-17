@@ -7,11 +7,8 @@ use Nette\SmartObject;
 use Quextum\Images\Request;
 use Quextum\Images\Result;
 
-/**
- * @method onBeforeRequest(Request $request)
- * @method onAfterRequest(Request $request, Result $result, Exception $exception)
- */
-class Executor
+
+class ProviderMiddlewares implements Provider
 {
 
     use SmartObject;
@@ -21,7 +18,7 @@ class Executor
 
     public function __construct(
         private ImagePipe $pipe,
-        private array      $middlewares
+        private array $middlewares
     )
     {
     }
